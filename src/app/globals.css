@@ -1,26 +1,142 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================================
+   Kahani Coffee House — design tokens
+   Direction: "D + C hybrid"
+   Palette and motifs from the retro cafe direction; spacing,
+   hairlines and square corners from the editorial one. The grid
+   band doubles as a nod to Chandigarh's sector plan.
+   ============================================================ */
+
+@theme {
+  /* Brand */
+  --color-brand: #1e5d59;
+  --color-brand-deep: #143f3c;
+  --color-brand-soft: #2e7a75;
+  --color-gold: #d9a123;
+  --color-gold-soft: #e9c46a;
+  --color-clay: #7a2e2a;
+
+  /* Grounds — warm neutrals biased toward the bone in the palette */
+  --color-paper: #fcf9f1;
+  --color-cream: #f7f1e2;
+  --color-bone: #efe7d4;
+  --color-bone-deep: #e4d9c0;
+
+  /* Ink */
+  --color-ink: #20211d;
+  --color-ink-2: #4e4a3c;
+  --color-muted: #857c67;
+
+  /* Rules */
+  --color-line: #d6cbaf;
+  --color-line-soft: #e7ddc6;
+
+  /* Status — semantic, deliberately separate from the brand accent */
+  --color-status-new: #7a2e2a;
+  --color-status-prep: #d9a123;
+  --color-status-ready: #1e5d59;
+  --color-status-done: #857c67;
+
+  /* Type */
+  --font-display: var(--font-alfa), Georgia, serif;
+  --font-body: var(--font-cabin), ui-sans-serif, system-ui, sans-serif;
+
+  /* The whole system is square. No radius scale by design. */
+  --radius-none: 0px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ------------------------------------------------------------
+   Base
+   ------------------------------------------------------------ */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-gold);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ------------------------------------------------------------
+   Motifs
+   The checkerboard is the one loud element in the system. It marks
+   a real boundary — top of page, end of a section — and is never
+   used as filler.
+   ------------------------------------------------------------ */
+
+.checker {
+  background: repeating-conic-gradient(
+      var(--color-ink) 0% 25%,
+      var(--color-bone) 0% 50%
+    )
+    0 0 / var(--checker-size, 10px) var(--checker-size, 10px);
+}
+
+.checker-teal {
+  background: repeating-conic-gradient(
+      var(--color-brand) 0% 25%,
+      var(--color-bone) 0% 50%
+    )
+    0 0 / var(--checker-size, 10px) var(--checker-size, 10px);
+}
+
+/* Faint woven texture, the way old cafe menu card stock reads */
+.grain {
+  position: relative;
+}
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+      45deg,
+      rgba(122, 46, 42, 0.035) 0 1px,
+      transparent 1px 6px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(30, 93, 89, 0.03) 0 1px,
+      transparent 1px 7px
+    );
+}
+
+/* Eyebrow / label treatment used across all three surfaces */
+.eyebrow {
+  font-size: 0.6875rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
 }
