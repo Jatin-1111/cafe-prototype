@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cafe } from "@/data/cafe";
+import { scanLink } from "@/lib/tableAuth";
 import { CheckerRule } from "@/components/CheckerRule";
 
 export function SiteFooter() {
@@ -54,7 +55,7 @@ export function SiteFooter() {
               <Link href="/demo" className="text-gold-soft hover:text-gold transition-colors">
                 Walk the prototype
               </Link>
-              <Link href="/t/07" className="text-bone/60 hover:text-gold transition-colors">
+              <Link href={scanLink("07")} className="text-bone/60 hover:text-gold transition-colors">
                 Table ordering
               </Link>
               <Link href="/admin" className="text-bone/60 hover:text-gold transition-colors">

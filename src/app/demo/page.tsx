@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { allScanLinks } from "@/lib/tableAuth";
 import { DemoHub } from "@/components/DemoHub";
 
 export const metadata: Metadata = {
@@ -9,5 +10,6 @@ export const metadata: Metadata = {
 };
 
 export default function DemoPage() {
-  return <DemoHub />;
+  // Stands in for the printed codes: each link carries that table's signed key.
+  return <DemoHub scanLinks={allScanLinks()} />;
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { categories, formatINR, itemsIn, menu, type MenuTag } from "@/data/menu";
 import { shots } from "@/data/media";
+import { scanLink } from "@/lib/tableAuth";
 import { CheckerRule } from "@/components/CheckerRule";
 import { Photo } from "@/components/Photo";
 import { VegMark } from "@/components/VegMark";
@@ -124,7 +125,7 @@ export default function MenuPage() {
               anyone&rsquo;s eye.
             </p>
             <Link
-              href="/t/07"
+              href={scanLink("07")}
               className="mt-6 inline-flex items-center h-12 px-7 bg-brand text-cream font-semibold tracking-wide hover:bg-brand-deep transition-colors"
             >
               Open table 07

@@ -29,7 +29,7 @@ const walkthrough = [
   },
 ];
 
-export function DemoHub() {
+export function DemoHub({ scanLinks }: { scanLinks: Record<string, string> }) {
   const mounted = useMounted();
   const orders = useOrders();
 
@@ -97,7 +97,7 @@ export function DemoHub() {
               return (
                 <li key={table}>
                   <Link
-                    href={`/t/${table}`}
+                    href={scanLinks[table]}
                     className={`block border-2 p-3 transition-colors ${
                       running
                         ? "border-brand bg-brand/5 hover:bg-brand/10"
@@ -118,7 +118,7 @@ export function DemoHub() {
 
             <li>
               <Link
-                href="/t/TA"
+                href={scanLinks.TA}
                 className="block border-2 border-gold bg-gold/10 p-3 h-full hover:bg-gold/20 transition-colors"
               >
                 <span className="font-display text-2xl leading-none">TA</span>
@@ -134,7 +134,7 @@ export function DemoHub() {
         {/* ---------- Surfaces ---------- */}
         <section className="mt-14 grid gap-5 lg:grid-cols-3">
           <SurfaceCard
-            href="/t/07"
+            href={scanLinks["07"]}
             eyebrow="Guest · phone"
             title="TABLE SCREEN"
             body="The menu, a cart, a kitchen note, and the tracker that follows the order to the table."
@@ -165,8 +165,9 @@ export function DemoHub() {
                 ONE CODE PER TABLE
               </p>
               <p className="mt-2 text-sm text-muted max-w-[38ch] leading-relaxed">
-                Decorative here. In production each code carries its table number, which is how
-                the counter knows where to walk.
+                The artwork is decorative, but the links above are not: each carries that
+                table&rsquo;s signed key. Typing another table&rsquo;s address gets you nowhere,
+                which is why an order always reaches the right marble.
               </p>
             </div>
           </div>

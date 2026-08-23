@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cafe } from "@/data/cafe";
 import { formatINR, signatures } from "@/data/menu";
 import { shots } from "@/data/media";
+import { scanLink } from "@/lib/tableAuth";
 import { CheckerRule } from "@/components/CheckerRule";
 import { Photo } from "@/components/Photo";
 import { FauxQR } from "@/components/FauxQR";
@@ -230,7 +231,7 @@ export default function HomePage() {
               </ol>
 
               <Link
-                href="/t/07"
+                href={scanLink("07")}
                 className="mt-10 inline-flex items-center h-12 px-7 bg-gold text-ink font-semibold tracking-wide hover:bg-gold-soft transition-colors"
               >
                 Try it — table 07
