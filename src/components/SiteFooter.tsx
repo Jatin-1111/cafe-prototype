@@ -18,7 +18,7 @@ export function SiteFooter() {
             </div>
 
             <div>
-              <p className="eyebrow text-sand/50">Find us</p>
+              <p className="eyebrow text-sand/60">Find us</p>
               <address className="mt-3 not-italic text-sm text-sand/80 leading-relaxed">
                 {cafe.address.line1}
                 <br />
@@ -33,12 +33,12 @@ export function SiteFooter() {
             </div>
 
             <div>
-              <p className="eyebrow text-sand/50">Hours</p>
+              <p className="eyebrow text-sand/60">Hours</p>
               <ul className="mt-3 space-y-3 text-sm text-sand/80">
                 {cafe.hours.map((slot) => (
                   <li key={slot.days}>
                     <span className="block">{slot.days}</span>
-                    <span className="tnum text-sand/55 whitespace-nowrap">
+                    <span className="tnum text-sand/60 whitespace-nowrap">
                       {slot.open} to {slot.close}
                     </span>
                   </li>
@@ -48,7 +48,7 @@ export function SiteFooter() {
           </div>
 
           <div className="mt-12 pt-6 border-t border-sand/15 flex flex-wrap items-center justify-between gap-4">
-            <p className="text-xs text-sand/45">
+            <p className="text-xs text-sand/60">
               Prototype build. {cafe.instagram}
             </p>
             <div className="flex gap-5 text-xs">

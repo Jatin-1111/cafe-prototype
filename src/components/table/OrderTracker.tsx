@@ -182,7 +182,7 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
             wondering whether it always said that. */}
         <AnimatePresence mode="wait" initial={false}>
           <motion.div key={order.status} {...swap}>
-            <h1 className="mt-3 font-display text-3xl leading-none tracking-tight text-brand">
+            <h1 className="mt-3 font-display text-3xl leading-none tracking-tight text-brand-deep">
               {current.label.toUpperCase()}
             </h1>
             <p className="mt-3 text-sm text-ink-2 max-w-[36ch] mx-auto leading-relaxed">
@@ -199,7 +199,7 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
               transition={transition}
               className="mt-5 inline-flex items-center gap-2 rounded-[6px] border border-brand/35 bg-brand/5 px-4 py-1.5"
             >
-              <span className="text-sm font-semibold text-brand">{eta}</span>
+              <span className="text-sm font-semibold text-brand-deep">{eta}</span>
               {order.readyBy ? (
                 <span className="tnum text-xs text-muted">· by {clockTime(order.readyBy)}</span>
               ) : null}
@@ -226,7 +226,7 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
               initial={false}
               animate={{
                 backgroundColor: done ? "var(--color-brand)" : "var(--color-paper)",
-                color: done ? "var(--color-cream)" : "var(--color-muted)",
+                color: done ? "var(--color-paper)" : "var(--color-muted)",
               }}
               transition={{
                 duration: DURATION.slow,
@@ -288,7 +288,7 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
                   <PlusIcon className="w-3.5 h-3.5" />
                 </button>
               </span>
-              <span className="tnum text-sm font-semibold text-brand">
+              <span className="tnum text-sm font-semibold text-brand-deep">
                 {ways === 1 ? "·" : `${formatINR(splitEvenly(order.total, ways)[1])} each`}
               </span>
             </span>
@@ -300,7 +300,7 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
       <div className="px-4 py-6">
         {settled && order.paymentClaimedAt ? (
           <div className="rounded-card border border-brand/40 bg-brand/5 px-4 py-5 text-center">
-            <p className="eyebrow text-brand">Waiting for the counter</p>
+            <p className="eyebrow text-brand-deep">Waiting for the counter</p>
             <p className="mt-2 text-sm text-ink-2 leading-relaxed max-w-[34ch] mx-auto">
               You said you have sent {formatINR(order.total)}. The counter confirms it against their
               own notification, then this closes.
@@ -309,7 +309,7 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
         ) : settled ? (
           order.billRequested ? (
             <div className="rounded-card border border-brand/40 bg-brand/5 px-4 py-5 text-center">
-              <p className="eyebrow text-brand">Bill on its way</p>
+              <p className="eyebrow text-brand-deep">Bill on its way</p>
               <p className="mt-2 text-sm text-ink-2 leading-relaxed max-w-[34ch] mx-auto">
                 {takeaway
                   ? "Bring it to the till. Card and cash both work."
@@ -318,7 +318,7 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
               <button
                 type="button"
                 onClick={() => setPayOpen(true)}
-                className="mt-4 text-xs font-bold uppercase tracking-[0.12em] text-brand underline underline-offset-4 hover:text-ink transition-colors"
+                className="mt-4 text-xs font-bold uppercase tracking-[0.12em] text-brand-deep underline underline-offset-4 hover:text-ink transition-colors"
               >
                 Pay by UPI instead
               </button>
@@ -402,7 +402,7 @@ function Lines({ order }: { order: Order }) {
     <ul className="px-4">
       {order.lines.map((line, index) => (
         <li key={index} className="flex gap-3 py-4 border-b border-line">
-          <span className="tnum text-sm font-bold text-brand w-7 shrink-0">{line.qty}×</span>
+          <span className="tnum text-sm font-bold text-brand-deep w-7 shrink-0">{line.qty}×</span>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm">{line.name}</p>
             {line.options ? (
@@ -412,7 +412,7 @@ function Lines({ order }: { order: Order }) {
                   .join(" · ")}
               </p>
             ) : null}
-            {line.note ? <p className="mt-1 text-xs text-brand">{line.note}</p> : null}
+            {line.note ? <p className="mt-1 text-xs text-brand-deep">{line.note}</p> : null}
           </div>
           <span className="tnum text-sm text-ink-2">{formatINR(line.price * line.qty)}</span>
         </li>
@@ -458,7 +458,7 @@ function PaySheet({
             onPaid();
           }}
           disabled={confirming}
-          className="w-full py-4 bg-brand text-cream font-bold uppercase tracking-[0.14em] text-xs hover:bg-brand-deep transition-colors disabled:opacity-50"
+          className="w-full py-4 bg-brand text-paper font-bold uppercase tracking-[0.14em] text-xs hover:bg-brand-deep transition-colors disabled:opacity-50"
         >
           {confirming ? "Telling the counter…" : "I have sent it"}
         </button>
@@ -473,7 +473,7 @@ function Receipt({ order }: { order: Order }) {
   return (
     <>
       <div className="px-4 pt-8 pb-6 text-center border-b-2 border-dashed border-line">
-        <p className="eyebrow text-brand">Paid · thank you</p>
+        <p className="eyebrow text-brand-deep">Paid · thank you</p>
         <h1 className="mt-3 font-display text-2xl leading-tight tracking-tight">
           {cafe.fullName.toUpperCase()}
         </h1>
@@ -559,7 +559,7 @@ function Shell({ table, children }: { table: string; children: React.ReactNode }
       <div className="w-full max-w-md mx-auto flex-1 bg-paper border-x border-line min-h-dvh">
         <ArcadeRule size={20} />
         <div className="px-4 pt-3 flex items-center justify-between">
-          <span className="inline-flex items-center h-6 px-3 rounded-[6px] bg-brand text-cream text-xs font-semibold uppercase tracking-[0.12em]">
+          <span className="inline-flex items-center h-6 px-3 rounded-[6px] bg-brand text-paper text-xs font-semibold uppercase tracking-[0.12em]">
             {label}
           </span>
           <Link href="/" className="wordmark text-sm leading-none">

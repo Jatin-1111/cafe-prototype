@@ -15,9 +15,19 @@
    ============================================================ */
 
 @theme {
-  /* Brand: the terracotta arch niches behind the counter */
+  /*
+   * Brand: the terracotta arch niches behind the counter.
+   *
+   * Three depths, and which one to reach for is a contrast question, not a
+   * taste one. `brand` is the fill: buttons, bars, anything a word sits on
+   * top of. `brand-deep` is the same terracotta for small text on a light
+   * ground, where `brand` itself lands at 4.15 on cream and 3.78 on sand and
+   * is simply too pale to read. `brand-dark` is a ground in its own right,
+   * deep enough that the brass holds against it.
+   */
   --color-brand: #bc5228;
   --color-brand-deep: #93391a;
+  --color-brand-dark: #7f2f12;
   --color-brand-soft: #d4805a;
 
   /* The jade velvet banquette */
@@ -39,10 +49,19 @@
   --color-sand: #f1e2d0;
   --color-sand-deep: #e5d2bc;
 
-  /* Ink: warm brown, never black */
+  /*
+   * Ink: warm brown, never black.
+   *
+   * Three steps, each a clear drop from the one above and each still legible
+   * on all three grounds. The old muted was #9c8574, which came out at 2.75
+   * on sand, and it was carrying the smallest type on the site: forty-two
+   * uses at 12px, six at 11px, one at 10px. Smallest type at the weakest
+   * contrast is backwards. ink-2 moved down with it to keep the three steps
+   * apart.
+   */
   --color-ink: #3b2a23;
-  --color-ink-2: #6e564a;
-  --color-muted: #9c8574;
+  --color-ink-2: #5d4538;
+  --color-muted: #775f50;
 
   /* Rules */
   --color-line: #e2ceb8;
@@ -96,7 +115,7 @@
     outline-offset: 2px;
   }
 
-  /* Controls are pills by default. In @layer base so a rounded-* utility still wins. */
+  /* Small, deliberate radius. In @layer base so a rounded-* utility still wins. */
   button,
   input,
   select {
@@ -121,102 +140,112 @@
 
 /* ------------------------------------------------------------
    Motifs
+
+   All of it inside @layer components, which is the whole point:
+   an unlayered rule beats every Tailwind utility no matter how
+   specific the utility is, so .eyebrow's colour was quietly
+   overriding text-brass-soft and text-sand/60 everywhere they
+   were used together. Six eyebrows on the dark sections were
+   meant to be brass and had been rendering muted the whole time,
+   at 2.29 against the ink. In a layer, a utility wins again.
    ------------------------------------------------------------ */
 
-/**
- * The arcade. A colonnade of tall arches, taken from the niche wall behind the
- * counter. Pitched taller than it is wide on purpose: at a squat, semicircular
- * pitch the same idea reads as scalloped bunting, which is a bakery awning, not
- * the room this cafe actually is.
- *
- * Reserved for real boundaries. Never filler between paragraphs.
- */
-.arcade {
-  --arch: 26px;
-  height: var(--arch);
-  background-color: currentColor;
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 20' preserveAspectRatio='none'%3E%3Cpath d='M2 20V7a4 4 0 0 1 8 0v13z' fill='%23000'/%3E%3C/svg%3E");
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 20' preserveAspectRatio='none'%3E%3Cpath d='M2 20V7a4 4 0 0 1 8 0v13z' fill='%23000'/%3E%3C/svg%3E");
-  -webkit-mask-size: calc(var(--arch) * 0.6) 100%;
-  mask-size: calc(var(--arch) * 0.6) 100%;
-  -webkit-mask-repeat: repeat-x;
-  mask-repeat: repeat-x;
-}
+@layer components {
+  /**
+   * The arcade. A colonnade of tall arches, taken from the niche wall behind the
+   * counter. Pitched taller than it is wide on purpose: at a squat, semicircular
+   * pitch the same idea reads as scalloped bunting, which is a bakery awning, not
+   * the room this cafe actually is.
+   *
+   * Reserved for real boundaries. Never filler between paragraphs.
+   */
+  .arcade {
+    --arch: 26px;
+    height: var(--arch);
+    background-color: currentColor;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 20' preserveAspectRatio='none'%3E%3Cpath d='M2 20V7a4 4 0 0 1 8 0v13z' fill='%23000'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 20' preserveAspectRatio='none'%3E%3Cpath d='M2 20V7a4 4 0 0 1 8 0v13z' fill='%23000'/%3E%3C/svg%3E");
+    -webkit-mask-size: calc(var(--arch) * 0.6) 100%;
+    mask-size: calc(var(--arch) * 0.6) 100%;
+    -webkit-mask-repeat: repeat-x;
+    mask-repeat: repeat-x;
+  }
 
-/** An arch-topped frame: the shape every photo and niche in the room takes. */
-.arch-top {
-  border-radius: 9999px 9999px var(--radius-card) var(--radius-card);
-  overflow: hidden;
-}
+  /** An arch-topped frame: the shape every photo and niche in the room takes. */
+  .arch-top {
+    border-radius: 9999px 9999px var(--radius-card) var(--radius-card);
+    overflow: hidden;
+  }
 
-/**
- * Terrazzo. The floor and the half-wall are speckled with it, so it
- * stands in for a flat tint on the quieter sections.
- */
-.terrazzo {
-  position: relative;
-}
-.terrazzo::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.5;
-  /* Each fleck layer gets its own tile size so the repeat never lines up
-     into a visible grid, the giveaway that turns terrazzo into polka dots. */
-  background-image:
-    radial-gradient(ellipse 5px 3px at 14% 21%, rgba(188, 82, 40, 0.22) 0 100%, transparent 0),
-    radial-gradient(ellipse 3px 5px at 68% 11%, rgba(31, 107, 86, 0.18) 0 100%, transparent 0),
-    radial-gradient(ellipse 4px 2px at 37% 64%, rgba(163, 50, 68, 0.16) 0 100%, transparent 0),
-    radial-gradient(ellipse 2px 4px at 86% 58%, rgba(192, 138, 74, 0.2) 0 100%, transparent 0),
-    radial-gradient(ellipse 6px 3px at 52% 87%, rgba(59, 42, 35, 0.12) 0 100%, transparent 0),
-    radial-gradient(ellipse 3px 3px at 21% 92%, rgba(31, 107, 86, 0.14) 0 100%, transparent 0),
-    radial-gradient(ellipse 4px 3px at 77% 34%, rgba(188, 82, 40, 0.14) 0 100%, transparent 0),
-    radial-gradient(ellipse 2px 3px at 6% 51%, rgba(192, 138, 74, 0.16) 0 100%, transparent 0);
-  background-size:
-    341px 293px,
-    227px 419px,
-    503px 271px,
-    389px 337px,
-    293px 457px,
-    461px 311px,
-    367px 239px,
-    257px 383px;
-}
+  /**
+   * Terrazzo. The floor and the half-wall are speckled with it, so it
+   * stands in for a flat tint on the quieter sections.
+   */
+  .terrazzo {
+    position: relative;
+  }
+  .terrazzo::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.5;
+    /* Each fleck layer gets its own tile size so the repeat never lines up
+       into a visible grid, the giveaway that turns terrazzo into polka dots. */
+    background-image:
+      radial-gradient(ellipse 5px 3px at 14% 21%, rgba(188, 82, 40, 0.22) 0 100%, transparent 0),
+      radial-gradient(ellipse 3px 5px at 68% 11%, rgba(31, 107, 86, 0.18) 0 100%, transparent 0),
+      radial-gradient(ellipse 4px 2px at 37% 64%, rgba(163, 50, 68, 0.16) 0 100%, transparent 0),
+      radial-gradient(ellipse 2px 4px at 86% 58%, rgba(192, 138, 74, 0.2) 0 100%, transparent 0),
+      radial-gradient(ellipse 6px 3px at 52% 87%, rgba(59, 42, 35, 0.12) 0 100%, transparent 0),
+      radial-gradient(ellipse 3px 3px at 21% 92%, rgba(31, 107, 86, 0.14) 0 100%, transparent 0),
+      radial-gradient(ellipse 4px 3px at 77% 34%, rgba(188, 82, 40, 0.14) 0 100%, transparent 0),
+      radial-gradient(ellipse 2px 3px at 6% 51%, rgba(192, 138, 74, 0.16) 0 100%, transparent 0);
+    background-size:
+      341px 293px,
+      227px 419px,
+      503px 271px,
+      389px 337px,
+      293px 457px,
+      461px 311px,
+      367px 239px,
+      257px 383px;
+  }
 
-/* Soft plaster wash, the way the walls catch light */
-.plaster {
-  position: relative;
-}
-.plaster::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(120% 80% at 15% 0%, rgba(192, 138, 74, 0.1), transparent 60%),
-    radial-gradient(90% 70% at 95% 100%, rgba(223, 167, 162, 0.12), transparent 65%);
-}
+  /* Soft plaster wash, the way the walls catch light */
+  .plaster {
+    position: relative;
+  }
+  .plaster::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(120% 80% at 15% 0%, rgba(192, 138, 74, 0.1), transparent 60%),
+      radial-gradient(90% 70% at 95% 100%, rgba(223, 167, 162, 0.12), transparent 65%);
+  }
 
-/* The wordmark treatment, echoing the backlit letters on the counter wall */
-.wordmark {
-  font-family: var(--font-display);
-  text-transform: uppercase;
-  letter-spacing: 0.3em;
-  font-weight: 400;
-  /* Tracking leaves a gap after the last letter. Pulling it off the box keeps
-     the mark optically centred without nudging left-aligned instances right. */
-  margin-right: -0.3em;
-}
+  /* The wordmark treatment, echoing the backlit letters on the counter wall */
+  .wordmark {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    font-weight: 400;
+    /* Tracking leaves a gap after the last letter. Pulling it off the box keeps
+       the mark optically centred without nudging left-aligned instances right. */
+    margin-right: -0.3em;
+  }
 
-.eyebrow {
-  font-size: 0.75rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  font-weight: 500;
-  color: var(--color-muted);
-}
+  .eyebrow {
+    font-size: 0.75rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--color-muted);
+  }
 
-.tnum {
-  font-variant-numeric: tabular-nums;
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
 }

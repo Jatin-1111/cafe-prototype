@@ -56,7 +56,7 @@ export default function HomePage() {
                   corner for every craving", sits below as the tagline it is. */}
               <h1 className="mt-7 font-display text-[clamp(2.5rem,6vw,4rem)] leading-[1.05] text-ink text-balance">
                 Pizza, pasta and coffee,{" "}
-                <span className="italic text-brand">one floor above Sector 35</span>
+                <span className="italic text-brand-deep">one floor above Sector 35</span>
               </h1>
 
               <div className="mt-8 max-w-[46ch]">
@@ -69,7 +69,7 @@ export default function HomePage() {
               <div className="mt-9 flex flex-wrap gap-3">
                 <Link
                   href="/menu"
-                  className="inline-flex items-center h-12 px-8 rounded-[6px] bg-brand text-cream font-medium tracking-wide hover:bg-brand-deep transition-colors"
+                  className="inline-flex items-center h-12 px-8 rounded-[6px] bg-brand text-paper font-medium tracking-wide hover:bg-brand-deep transition-colors"
                 >
                   See the menu
                 </Link>
@@ -86,7 +86,7 @@ export default function HomePage() {
                   <span className="inline-flex items-center gap-2">
                     {/* One star, not five: a row of five filled stars beside a
                         4.4 is the kind of small dishonesty people notice. */}
-                    <StarIcon className="w-4 h-4 text-brand" />
+                    <StarIcon className="w-4 h-4 text-brand-deep" />
                     <span className="tnum font-medium text-ink">{cafe.acclaim.rating}</span>
                     <span className="text-muted">
                       from {cafe.acclaim.reviews.toLocaleString("en-IN")} reviews on{" "}
@@ -102,7 +102,7 @@ export default function HomePage() {
 
             {/* Counter price board: the thing hanging behind the till in every old cafe */}
             <div className="lg:justify-self-end w-full max-w-sm">
-              <div className="arch-top bg-brand text-cream shadow-[0_28px_70px_-30px] shadow-brand/70">
+              <div className="arch-top bg-brand-dark text-paper shadow-[0_28px_70px_-30px] shadow-brand/70">
                 <div className="px-7 pt-14 pb-5 text-center">
                   <p className="eyebrow text-brass-soft">On the counter today</p>
                   <p className="wordmark text-sm mt-3 leading-none text-cream">The regulars</p>
@@ -123,7 +123,7 @@ export default function HomePage() {
                   ))}
                 </ul>
                 <div className="px-7 pb-7">
-                  <p className="text-xs text-cream/60 leading-relaxed border-t border-cream/15 pt-4">
+                  <p className="text-xs text-paper/80 leading-relaxed border-t border-paper/20 pt-4">
                     Prices include taxes. Everything is served all day.
                   </p>
                 </div>
@@ -153,7 +153,7 @@ export default function HomePage() {
               <h2 className="mt-4 font-display text-4xl sm:text-5xl leading-[0.95] tracking-tight">
                 Built around
                 <br />
-                <span className="italic text-brand">a row of arches</span>
+                <span className="italic text-brand-deep">a row of arches</span>
               </h2>
               <Photo
                 shot={shots.counter}
@@ -200,7 +200,7 @@ export default function HomePage() {
             </div>
             <Link
               href="/menu"
-              className="text-sm font-semibold text-brand hover:text-ink transition-colors underline underline-offset-4"
+              className="text-sm font-semibold text-brand-deep hover:text-ink transition-colors underline underline-offset-4"
             >
               Full menu, {menu.length} items
             </Link>
@@ -223,7 +223,7 @@ export default function HomePage() {
                   <p className="mt-3 text-sm text-muted leading-relaxed flex-1">
                     {item.note ?? item.description}
                   </p>
-                  <p className="mt-5 tnum font-semibold text-brand">{formatINR(item.price)}</p>
+                  <p className="mt-5 tnum font-semibold text-brand-deep">{formatINR(item.price)}</p>
                 </article>
               </Reveal>
             ))}
@@ -236,7 +236,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl px-5 sm:px-8 py-20 sm:py-24">
           <div className="grid gap-14 lg:grid-cols-[1fr_0.8fr] lg:gap-20 items-center">
             <Reveal>
-              <p className="eyebrow text-brass">Order from your table</p>
+              <p className="eyebrow text-brass-soft">Order from your table</p>
               <h2 className="mt-4 font-display text-4xl sm:text-5xl leading-[0.95] tracking-tight">
                 Nobody likes
                 <br />
@@ -250,7 +250,7 @@ export default function HomePage() {
               <ol className="mt-10 grid gap-px bg-sand/15 border border-sand/15 sm:grid-cols-3">
                 {steps.map((step, index) => (
                   <li key={step.title} className="bg-ink p-5">
-                    <span className="eyebrow text-brass tnum">0{index + 1}</span>
+                    <span className="eyebrow text-brass-soft tnum">0{index + 1}</span>
                     <h3 className="mt-2 font-semibold text-sand">{step.title}</h3>
                     <p className="mt-2 text-sm text-sand/60 leading-relaxed">{step.body}</p>
                   </li>
@@ -270,7 +270,7 @@ export default function HomePage() {
                 <FauxQR seed="refections-table-07" className="w-44 h-44 text-ink" />
                 <p className="mt-4 text-center eyebrow text-ink">Table 07</p>
               </div>
-              <p className="mt-4 text-center text-xs text-sand/45 max-w-[26ch] mx-auto">
+              <p className="mt-4 text-center text-xs text-sand/60 max-w-[26ch] mx-auto">
                 Decorative in the prototype. The demo link opens the same screen.
               </p>
             </Reveal>
@@ -295,13 +295,13 @@ export default function HomePage() {
               <div className="mt-6 flex flex-wrap gap-x-8 gap-y-2 text-sm">
                 <a
                   href={`tel:${cafe.phone.replace(/\s/g, "")}`}
-                  className="font-medium text-brand hover:text-ink transition-colors"
+                  className="font-medium text-brand-deep hover:text-ink transition-colors"
                 >
                   {cafe.phone}
                 </a>
                 <a
                   href={`mailto:${cafe.email}`}
-                  className="font-medium text-brand hover:text-ink transition-colors"
+                  className="font-medium text-brand-deep hover:text-ink transition-colors"
                 >
                   {cafe.email}
                 </a>
@@ -309,7 +309,7 @@ export default function HomePage() {
                   href={cafe.address.maps}
                   target="_blank"
                   rel="noreferrer"
-                  className="font-medium text-brand hover:text-ink transition-colors underline underline-offset-4"
+                  className="font-medium text-brand-deep hover:text-ink transition-colors underline underline-offset-4"
                 >
                   Open in Maps
                 </a>
@@ -351,7 +351,7 @@ export default function HomePage() {
               <h2 className="mt-4 font-display text-4xl leading-[1.08]">
                 Hold me
                 <br />
-                <span className="italic text-brand">a table</span>
+                <span className="italic text-brand-deep">a table</span>
               </h2>
               <p className="mt-6 text-ink-2 leading-relaxed max-w-[38ch]">
                 We hold a few tables back for walk-ins, always. The rest can be booked from here, up

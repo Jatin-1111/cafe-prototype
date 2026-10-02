@@ -22,7 +22,7 @@ const tagLabel: Record<MenuTag, string> = {
 
 const tagTone: Record<MenuTag, string> = {
   bestseller: "border-brass text-ink bg-brass/20",
-  new: "border-brand text-brand bg-brand/5",
+  new: "border-brand text-brand-deep bg-brand/5",
   seasonal: "border-line text-muted bg-transparent",
   "contains-nuts": "border-line text-muted bg-transparent",
   spicy: "border-wine text-wine bg-wine/5",
@@ -99,7 +99,7 @@ export default function MenuPage() {
                     ) : null}
                   </div>
 
-                  <p className="tnum font-display text-lg text-brand">{formatINR(item.price)}</p>
+                  <p className="tnum font-display text-lg text-brand-deep">{formatINR(item.price)}</p>
                 </li>
               ))}
             </ul>
@@ -121,7 +121,7 @@ export default function MenuPage() {
             </p>
             <Link
               href={scanLink("07")}
-              className="mt-6 inline-flex items-center h-12 px-8 rounded-[6px] bg-brand text-cream font-medium tracking-wide hover:bg-brand-deep transition-colors"
+              className="mt-6 inline-flex items-center h-12 px-8 rounded-[6px] bg-brand text-paper font-medium tracking-wide hover:bg-brand-deep transition-colors"
             >
               Open table 07
             </Link>

@@ -65,7 +65,7 @@ export function DemoHub({ scanLinks }: { scanLinks: Record<string, string> }) {
           </div>
           <Link
             href="/"
-            className="shrink-0 wordmark text-base leading-none hover:text-brand transition-colors"
+            className="shrink-0 wordmark text-base leading-none hover:text-brand-deep transition-colors"
           >
             {cafe.name.toUpperCase()}
           </Link>
@@ -74,7 +74,7 @@ export function DemoHub({ scanLinks }: { scanLinks: Record<string, string> }) {
         <ol className="mt-10 grid gap-px bg-line border border-line sm:grid-cols-2 lg:grid-cols-4">
           {walkthrough.map((item, index) => (
             <li key={item.step} className="bg-paper p-5">
-              <span className="eyebrow tnum text-brand">0{index + 1}</span>
+              <span className="eyebrow tnum text-brand-deep">0{index + 1}</span>
               <h2 className="mt-2 font-semibold">{item.step}</h2>
               <p className="mt-2 text-sm text-muted leading-relaxed">{item.body}</p>
             </li>
@@ -106,7 +106,7 @@ export function DemoHub({ scanLinks }: { scanLinks: Record<string, string> }) {
                     }`}
                   >
                     <span className="font-display text-2xl leading-none tnum">{table}</span>
-                    <span className="mt-2 block text-[11px] uppercase tracking-[0.1em] font-bold text-brand min-h-[1.1em]">
+                    <span className="mt-2 block text-[11px] uppercase tracking-[0.1em] font-bold text-brand-deep min-h-[1.1em]">
                       {running ? running.label : ""}
                     </span>
                     <span className="mt-0.5 block tnum text-xs text-muted">
@@ -210,11 +210,11 @@ function SurfaceCard({
       className="group rounded-card border border-line bg-paper p-6 hover:border-ink transition-colors flex flex-col"
     >
       <span className="eyebrow">{eyebrow}</span>
-      <span className="mt-3 font-display text-xl leading-tight tracking-tight group-hover:text-brand transition-colors">
+      <span className="mt-3 font-display text-xl leading-tight tracking-tight group-hover:text-brand-deep transition-colors">
         {title}
       </span>
       <span className="mt-3 text-sm text-muted leading-relaxed flex-1">{body}</span>
-      <span className="mt-5 inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.12em] text-brand">
+      <span className="mt-5 inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.12em] text-brand-deep">
         Open
         <ChevronRightIcon className="w-3.5 h-3.5" />
       </span>

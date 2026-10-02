@@ -27,14 +27,14 @@ export function SiteHeader() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="text-sm font-medium text-ink-2 hover:text-brand transition-colors"
+                  className="text-sm font-medium text-ink-2 hover:text-brand-deep transition-colors"
                 >
                   {link.label}
                 </Link>
               ))}
               <Link
                 href="/#reserve"
-                className="hidden sm:inline-flex items-center rounded-[6px] bg-brand text-cream px-5 h-10 text-sm font-medium tracking-wide hover:bg-brand-deep transition-colors"
+                className="hidden sm:inline-flex items-center rounded-[6px] bg-brand text-paper px-5 h-10 text-sm font-medium tracking-wide hover:bg-brand-deep transition-colors"
               >
                 Reserve
               </Link>

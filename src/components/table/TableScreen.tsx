@@ -92,7 +92,7 @@ export function TableScreen({ table }: { table: string }) {
         <header className="sticky top-0 z-30 bg-paper">
           <ArcadeRule size={20} />
           <div className="px-4 pt-3 flex items-center justify-between gap-3">
-            <span className="inline-flex items-center h-6 px-3 rounded-[6px] bg-brand text-cream text-xs font-semibold uppercase tracking-[0.12em]">
+            <span className="inline-flex items-center h-6 px-3 rounded-[6px] bg-brand text-paper text-xs font-semibold uppercase tracking-[0.12em]">
               {spotLabel}
             </span>
             <span className="text-xs uppercase tracking-[0.12em] text-muted">
@@ -181,13 +181,13 @@ export function TableScreen({ table }: { table: string }) {
                 className="flex items-center justify-between gap-3 rounded-[6px] border border-brand/40 bg-brand/5 px-4 py-2.5 mb-2 hover:bg-brand/10 transition-colors"
               >
                 <span className="text-xs">
-                  <span className="font-semibold text-brand">{order.code}</span>
+                  <span className="font-semibold text-brand-deep">{order.code}</span>
                   <span className="text-muted">
                     {" · "}
                     {order.lines.length} {order.lines.length === 1 ? "item" : "items"}
                   </span>
                 </span>
-                <span className="text-xs uppercase tracking-[0.12em] font-bold text-brand">
+                <span className="text-xs uppercase tracking-[0.12em] font-bold text-brand-deep">
                   <span className="inline-flex items-center gap-1">
                     {order.billRequested ? "Bill coming" : STATUS_LABEL[order.status]}
                     <ChevronRightIcon className="w-3.5 h-3.5" />
@@ -223,7 +223,7 @@ export function TableScreen({ table }: { table: string }) {
                       <span className="mt-2 block text-xs font-semibold leading-snug">
                         {item.name}
                       </span>
-                      <span className="tnum mt-0.5 block text-xs text-brand">
+                      <span className="tnum mt-0.5 block text-xs text-brand-deep">
                         {out ? "Sold out" : formatINR(item.price)}
                       </span>
                     </button>
@@ -260,7 +260,7 @@ export function TableScreen({ table }: { table: string }) {
                     <h3 className="font-semibold text-[15px] leading-snug truncate">{item.name}</h3>
                   </div>
                   <p className="mt-1 text-xs text-muted leading-relaxed">{item.description}</p>
-                  <p className="mt-1.5 tnum text-sm font-semibold text-brand">
+                  <p className="mt-1.5 tnum text-sm font-semibold text-brand-deep">
                     {formatINR(item.price)}
                   </p>
                 </div>
@@ -295,7 +295,7 @@ export function TableScreen({ table }: { table: string }) {
                   setQuery("");
                   setVegOnly(false);
                 }}
-                className="mt-3 text-xs font-semibold uppercase tracking-[0.12em] text-brand underline underline-offset-4"
+                className="mt-3 text-xs font-semibold uppercase tracking-[0.12em] text-brand-deep underline underline-offset-4"
               >
                 Clear the filters
               </button>
@@ -517,7 +517,7 @@ function CheckoutSheet({
                   <p className="mt-1 tnum text-xs text-muted">
                     {formatINR(line.price)} each
                     {line.base && line.price > line.base ? (
-                      <span className="text-brand">
+                      <span className="text-brand-deep">
                         {" "}
                         · includes {formatINR(line.price - line.base)} extras
                       </span>
@@ -574,7 +574,7 @@ function CheckoutSheet({
                     onClick={() => setOrderType(choice.key)}
                     className={`h-11 text-xs font-bold uppercase tracking-[0.1em] border-2 transition-colors ${
                       on
-                        ? "border-brand bg-brand text-cream"
+                        ? "border-brand bg-brand text-paper"
                         : "border-line text-ink-2 hover:border-ink"
                     }`}
                   >

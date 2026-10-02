@@ -417,7 +417,7 @@ export function AdminBoard() {
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6 py-4 flex flex-wrap gap-x-6 gap-y-2 items-center justify-between text-xs text-muted">
           <p>
             Prototype. Orders sync across every device. Open the{" "}
-            <Link href="/demo" className="text-brand font-semibold hover:underline">
+            <Link href="/demo" className="text-brand-deep font-semibold hover:underline">
               demo hub
             </Link>{" "}
             in another window and send one.
@@ -447,7 +447,7 @@ function Stat({
       <dt className="eyebrow">{label}</dt>
       <dd
         className={`mt-1 tnum text-2xl font-semibold leading-none ${
-          warn ? "text-status-new" : accent ? "text-brand" : "text-ink"
+          warn ? "text-status-new" : accent ? "text-brand-deep" : "text-ink"
         }`}
       >
         {value}
@@ -550,7 +550,7 @@ function Ticket({
             <span className="tnum text-xs text-muted">{order.guest.phone}</span>
           ) : null}
           {order.billRequested ? (
-            <span className="ml-auto rounded-[6px] text-[10px] font-semibold uppercase tracking-[0.1em] bg-brand text-cream px-2.5 py-0.5">
+            <span className="ml-auto rounded-[6px] text-[10px] font-semibold uppercase tracking-[0.1em] bg-brand text-paper px-2.5 py-0.5">
               Bill asked for
             </span>
           ) : null}
@@ -589,7 +589,7 @@ function Ticket({
                 </button>
               </span>
             ) : (
-              <span className="tnum font-bold text-brand w-6 shrink-0">{line.qty}×</span>
+              <span className="tnum font-bold text-brand-deep w-6 shrink-0">{line.qty}×</span>
             )}
             <span
               className={`min-w-0 ${editing && line.qty <= 0 ? "line-through text-muted" : ""}`}
@@ -601,7 +601,7 @@ function Ticket({
                 </span>
               ) : null}
               {line.note ? (
-                <span className="block text-xs font-semibold text-brand">{line.note}</span>
+                <span className="block text-xs font-semibold text-brand-deep">{line.note}</span>
               ) : null}
             </span>
           </li>
@@ -644,7 +644,7 @@ function Ticket({
           <>
             {order.paymentClaimedAt && order.claimedMethod ? (
               <div className="mb-2 rounded-sm border border-brand/50 bg-brand/5 px-2.5 py-2">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-brand">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-brand-deep">
                   Guest says paid by {PAYMENT_LABEL[order.claimedMethod]}
                 </p>
                 <p className="mt-0.5 text-[11px] text-muted">
@@ -702,7 +702,7 @@ function Ticket({
                   await run(setOrderStatus(order.id, undoTo));
                   onUndone();
                 }}
-                className="text-[11px] font-semibold uppercase tracking-[0.08em] text-brand underline underline-offset-2"
+                className="text-[11px] font-semibold uppercase tracking-[0.08em] text-brand-deep underline underline-offset-2"
               >
                 Undo
               </motion.button>
