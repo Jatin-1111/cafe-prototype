@@ -46,14 +46,18 @@ export const cafe = {
   ],
 
   /**
-   * Taken from the cafe's public delivery listing. CONFIRM THIS BEFORE SHOWING
-   * IT TO THEM — platforms disagree and the figure moves. Set `rating` to null
-   * to drop the line entirely rather than risk quoting a number back wrong.
+   * Read off the cafe's own Zomato listing on the date below. Dining rather
+   * than delivery: this is a room people sit in, and it is the far larger
+   * sample (3,482 against 388). Attributed on the page, because an unsourced
+   * number is just a claim.
+   *
+   * It will drift. Re-check it, or set `rating` to null to drop the line.
    */
   acclaim: {
-    rating: 4.3,
-    reviews: 3500,
+    rating: 4.4,
+    reviews: 3482,
     source: "Zomato",
+    checkedOn: "2026-10-02",
   },
 
   /** Added once to a takeaway order, the way most cafes here charge for boxes. */

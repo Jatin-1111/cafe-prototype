@@ -87,7 +87,8 @@ export default function HomePage() {
                     </span>
                     <span className="tnum font-medium text-ink">{cafe.acclaim.rating}</span>
                     <span className="text-muted">
-                      from {cafe.acclaim.reviews.toLocaleString("en-IN")}+ reviews
+                      from {cafe.acclaim.reviews.toLocaleString("en-IN")} reviews on{" "}
+                      {cafe.acclaim.source}
                     </span>
                   </span>
                 ) : null}
