@@ -1,17 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Alfa_Slab_One, Cabin } from "next/font/google";
+import { Jost, Marcellus } from "next/font/google";
 import "./globals.css";
 import { cafe } from "@/data/cafe";
 
-const alfa = Alfa_Slab_One({
-  variable: "--font-alfa",
+// Echoes the thin, wide-tracked letters backlit on the counter wall.
+const marcellus = Marcellus({
+  variable: "--font-marcellus",
   weight: "400",
   subsets: ["latin"],
   display: "swap",
 });
 
-const cabin = Cabin({
-  variable: "--font-cabin",
+const jost = Jost({
+  variable: "--font-jost",
   subsets: ["latin"],
   display: "swap",
 });
@@ -22,11 +23,11 @@ export const metadata: Metadata = {
     template: `%s · ${cafe.name}`,
   },
   description:
-    "A Sector 9 house rebuilt around a crate of auctioned Jeanneret chairs. Single-estate coffee, all-day plates, and a room that has not been in a hurry since 2019.",
+    "Tasteful food, chilled drinks and vibes that calm the mind — a cosy corner for every craving, on the first floor in Sector 35C, Chandigarh.",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1e5d59",
+  themeColor: "#bc5228",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -34,7 +35,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${alfa.variable} ${cabin.variable} h-full antialiased`}
+      className={`${marcellus.variable} ${jost.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-paper text-ink">{children}</body>
     </html>

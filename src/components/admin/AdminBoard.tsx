@@ -98,8 +98,8 @@ export function AdminBoard() {
       <header className="sticky top-0 z-30 bg-paper border-b border-line">
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <div className="flex items-baseline gap-3 min-w-0">
-            <Link href="/" className="font-display text-lg leading-none tracking-tight shrink-0">
-              KAHANI
+            <Link href="/" className="wordmark text-sm leading-none shrink-0">
+              {cafe.name.toUpperCase()}
             </Link>
             <span className="eyebrow truncate">Counter · {cafe.address.line1}</span>
           </div>
@@ -174,7 +174,7 @@ export function AdminBoard() {
 
                   <div className="mt-3 flex flex-col gap-3">
                     {lane.orders.length === 0 ? (
-                      <p className="border border-dashed border-line px-3 py-8 text-center text-xs text-muted">
+                      <p className="rounded-card border border-dashed border-line px-3 py-8 text-center text-xs text-muted">
                         Nothing here
                       </p>
                     ) : (
@@ -193,7 +193,7 @@ export function AdminBoard() {
                 type="button"
                 onClick={() => setClosedOpen((open) => !open)}
                 aria-expanded={closedOpen}
-                className="flex items-center gap-3 text-sm font-bold uppercase tracking-[0.12em] text-ink-2 hover:text-ink transition-colors"
+                className="flex items-center gap-3 rounded-none text-sm font-bold uppercase tracking-[0.12em] text-ink-2 hover:text-ink transition-colors"
               >
                 <span aria-hidden className={`w-2.5 h-2.5 ${laneBar.paid}`} />
                 Closed today
@@ -204,7 +204,7 @@ export function AdminBoard() {
               </button>
 
               {closedOpen ? (
-                <ul className="mt-4 border border-line divide-y divide-line-soft">
+                <ul className="mt-4 rounded-card border border-line divide-y divide-line-soft overflow-hidden">
                   {closed.length === 0 ? (
                     <li className="px-3 py-6 text-center text-xs text-muted">
                       Nothing settled yet
@@ -295,7 +295,7 @@ function Ticket({ order, now }: { order: Order; now: number }) {
 
   return (
     <article
-      className={`bg-paper border border-line border-l-4 ${
+      className={`bg-paper rounded-card overflow-hidden border border-line border-l-4 ${
         order.billRequested
           ? "border-l-brand"
           : veryLate
@@ -330,7 +330,7 @@ function Ticket({ order, now }: { order: Order; now: number }) {
             <span className="tnum text-xs text-muted">{order.guest.phone}</span>
           ) : null}
           {order.billRequested ? (
-            <span className="ml-auto text-[10px] font-bold uppercase tracking-[0.1em] bg-brand text-cream px-2 py-0.5">
+            <span className="ml-auto rounded-full text-[10px] font-semibold uppercase tracking-[0.1em] bg-brand text-cream px-2.5 py-0.5">
               Bill asked for
             </span>
           ) : null}
@@ -354,7 +354,7 @@ function Ticket({ order, now }: { order: Order; now: number }) {
       </ul>
 
       {order.note ? (
-        <p className="mx-3 mb-2.5 border-l-2 border-gold bg-gold/10 px-2.5 py-1.5 text-xs text-ink-2">
+        <p className="mx-3 mb-2.5 rounded-sm border-l-2 border-brass bg-brass/10 px-2.5 py-1.5 text-xs text-ink-2">
           {order.note}
         </p>
       ) : null}
@@ -372,7 +372,7 @@ function Ticket({ order, now }: { order: Order; now: number }) {
                   key={method}
                   type="button"
                   onClick={() => markPaid(order.id, method)}
-                  className="h-8 border border-ink text-[11px] font-bold uppercase tracking-[0.06em] hover:bg-ink hover:text-bone transition-colors"
+                  className="h-8 border border-ink text-[11px] font-bold uppercase tracking-[0.06em] hover:bg-ink hover:text-sand transition-colors"
                 >
                   {PAYMENT_LABEL[method]}
                 </button>
@@ -386,7 +386,7 @@ function Ticket({ order, now }: { order: Order; now: number }) {
               <button
                 type="button"
                 onClick={() => advanceOrder(order.id)}
-                className="h-8 px-3 bg-ink text-bone text-[11px] font-bold uppercase tracking-[0.1em] hover:bg-brand transition-colors"
+                className="h-8 px-3 bg-ink text-sand text-[11px] font-bold uppercase tracking-[0.1em] hover:bg-brand transition-colors"
               >
                 {action}
               </button>
@@ -432,7 +432,7 @@ function Availability({ soldOut, onClose }: { soldOut: string[]; onClose: () => 
                         type="button"
                         onClick={() => toggleSoldOut(item.id)}
                         aria-pressed={off}
-                        className={`w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs border transition-colors ${
+                        className={`w-full flex items-center gap-2 rounded-full px-3 py-1.5 text-left text-xs border transition-colors ${
                           off
                             ? "border-status-new bg-status-new/5 text-status-new line-through"
                             : "border-transparent text-ink-2 hover:border-line hover:bg-paper"

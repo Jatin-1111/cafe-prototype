@@ -16,7 +16,7 @@ import {
   type Order,
 } from "@/lib/orders";
 import { useMounted, useNow, useOrder } from "@/lib/useStore";
-import { CheckerRule } from "@/components/CheckerRule";
+import { ArcadeRule } from "@/components/ArcadeRule";
 import { FauxQR } from "@/components/FauxQR";
 import { Sheet } from "@/components/table/Sheet";
 
@@ -45,7 +45,7 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
           </p>
           <Link
             href={`/t/${table}`}
-            className="mt-8 inline-flex items-center h-12 px-7 bg-ink text-bone text-xs font-bold uppercase tracking-[0.14em] hover:bg-brand transition-colors"
+            className="mt-8 inline-flex items-center h-12 px-8 rounded-full bg-ink text-cream text-xs font-semibold uppercase tracking-[0.14em] hover:bg-brand transition-colors"
           >
             Back to the menu
           </Link>
@@ -111,7 +111,7 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
       <Lines order={order} />
 
       {order.note ? (
-        <div className="mx-4 mt-4 border-l-4 border-gold bg-cream px-4 py-3">
+        <div className="mx-4 mt-4 rounded-card border-l-4 border-brass bg-cream px-4 py-3">
           <p className="eyebrow">Your note</p>
           <p className="mt-1.5 text-sm text-ink-2">{order.note}</p>
         </div>
@@ -126,7 +126,7 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
       <div className="px-4 py-6">
         {settled ? (
           order.billRequested ? (
-            <div className="border-2 border-brand bg-brand/5 px-4 py-5 text-center">
+            <div className="rounded-card border border-brand/40 bg-brand/5 px-4 py-5 text-center">
               <p className="eyebrow text-brand">Bill on its way</p>
               <p className="mt-2 text-sm text-ink-2 leading-relaxed max-w-[34ch] mx-auto">
                 {takeaway
@@ -146,14 +146,14 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
               <button
                 type="button"
                 onClick={() => setPayOpen(true)}
-                className="w-full py-4 bg-clay text-cream font-bold uppercase tracking-[0.14em] text-xs hover:bg-ink transition-colors"
+                className="w-full py-4 bg-wine text-cream font-bold uppercase tracking-[0.14em] text-xs hover:bg-ink transition-colors"
               >
                 Pay now · {formatINR(order.total)}
               </button>
               <button
                 type="button"
                 onClick={() => requestBill(order.id)}
-                className="w-full py-4 border-2 border-ink text-xs font-bold uppercase tracking-[0.14em] hover:bg-ink hover:text-bone transition-colors"
+                className="w-full py-4 border-2 border-ink text-xs font-bold uppercase tracking-[0.14em] hover:bg-ink hover:text-sand transition-colors"
               >
                 Ask for the bill
               </button>
@@ -168,7 +168,7 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
 
         <Link
           href={`/t/${table}`}
-          className="mt-6 w-full inline-flex items-center justify-center h-12 border border-line text-xs font-bold uppercase tracking-[0.14em] text-ink-2 hover:border-ink hover:text-ink transition-colors"
+          className="mt-6 w-full inline-flex items-center justify-center h-12 rounded-full border border-line text-xs font-semibold uppercase tracking-[0.14em] text-ink-2 hover:border-ink hover:text-ink transition-colors"
         >
           Order something else
         </Link>
@@ -234,7 +234,7 @@ function PaySheet({
       onClose={onClose}
     >
       <div className="px-4 py-6 overflow-y-auto text-center">
-        <div className="mx-auto w-fit bg-bone border-4 border-ink p-4">
+        <div className="mx-auto w-fit bg-sand border-4 border-ink p-4">
           <FauxQR seed={`pay-${order.code}`} className="w-40 h-40 text-ink" />
         </div>
         <p className="mt-4 eyebrow">{cafe.fullName}</p>
@@ -321,12 +321,12 @@ function Receipt({ order }: { order: Order }) {
         <div className="border border-line bg-cream px-4 py-5 text-center">
           <p className="font-display text-lg leading-tight tracking-tight">COME BACK SOON</p>
           <p className="mt-2 text-xs text-muted leading-relaxed max-w-[32ch] mx-auto">
-            Filter refills are free until noon, and the corner table is always first-come.
+            The jade booth seats six, and the Wi-Fi is on the house all day.
           </p>
         </div>
         <Link
           href={`/t/${order.table}`}
-          className="mt-4 w-full inline-flex items-center justify-center h-12 border-2 border-ink text-xs font-bold uppercase tracking-[0.14em] hover:bg-ink hover:text-bone transition-colors"
+          className="mt-4 w-full inline-flex items-center justify-center h-12 rounded-full border border-ink/30 text-xs font-semibold uppercase tracking-[0.14em] hover:bg-ink hover:text-cream hover:border-ink transition-colors"
         >
           Start a new order
         </Link>
@@ -338,15 +338,15 @@ function Receipt({ order }: { order: Order }) {
 function Shell({ table, children }: { table: string; children: React.ReactNode }) {
   const label = table === "TA" ? "Takeaway" : `Table ${table}`;
   return (
-    <div className="min-h-dvh bg-bone flex flex-col">
+    <div className="min-h-dvh bg-sand flex flex-col">
       <div className="w-full max-w-md mx-auto flex-1 bg-paper border-x border-line min-h-dvh">
-        <CheckerRule size={8} />
+        <ArcadeRule size={20} />
         <div className="px-4 pt-3 flex items-center justify-between">
-          <span className="inline-flex items-center h-6 px-2.5 bg-brand text-cream text-[10px] font-bold uppercase tracking-[0.14em]">
+          <span className="inline-flex items-center h-6 px-3 rounded-full bg-brand text-cream text-[10px] font-semibold uppercase tracking-[0.14em]">
             {label}
           </span>
-          <Link href="/" className="font-display text-base leading-none tracking-tight">
-            KAHANI
+          <Link href="/" className="wordmark text-sm leading-none">
+            {cafe.name.toUpperCase()}
           </Link>
         </div>
         {children}

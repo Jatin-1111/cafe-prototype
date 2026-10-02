@@ -5,7 +5,7 @@ import { DemoHub } from "@/components/DemoHub";
 export const metadata: Metadata = {
   title: "Walk the prototype",
   description:
-    "Entry point for the Kahani prototype — pick a table, send an order, and work it through the counter board.",
+    "Entry point for the Refections prototype — pick a table, send an order, and work it through the counter board.",
   robots: { index: false },
 };
 

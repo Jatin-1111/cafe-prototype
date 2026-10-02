@@ -112,10 +112,10 @@ export type Order = {
   paymentMethod?: PaymentMethod;
 };
 
-const ORDERS_KEY = "kahani.orders.v3";
-const CART_KEY = "kahani.carts.v3";
-const SOLD_OUT_KEY = "kahani.soldout.v3";
-const CHANNEL = "kahani-sync";
+const ORDERS_KEY = "refections.orders.v1";
+const CART_KEY = "refections.carts.v1";
+const SOLD_OUT_KEY = "refections.soldout.v1";
+const CHANNEL = "refections-sync";
 
 type Carts = Record<string, OrderLine[]>;
 
@@ -188,8 +188,8 @@ function line(itemId: string, qty: number, options?: Record<string, string>): Or
   return { itemId, name: item.name, price: item.price, qty, options };
 }
 
-/** The pot runs out most evenings — the menu copy says so, so the demo honours it. */
-const SEED_SOLD_OUT = ["m-keema-kulcha"];
+/** Something is always off the board by the evening rush. */
+const SEED_SOLD_OUT = ["m-bbq-chicken-pizza"];
 
 function seedOrders(now: number): Order[] {
   const min = 60_000;
@@ -207,31 +207,38 @@ function seedOrders(now: number): Order[] {
   }> = [
     {
       table: "11",
-      lines: [line("m-doodh-patti", 4), line("m-bun-makkhan", 2), line("m-khari-rusk", 1)],
+      lines: [
+        line("m-cold-coffee", 2),
+        line("m-peri-fries", 1),
+        line("m-garlic-bread", 1),
+      ],
       status: "new",
       ago: 1.5 * min,
       guest: { name: "Ritika" },
     },
     {
       table: "03",
-      lines: [line("m-bhurji", 1), line("m-filter", 2, { Sweetness: "No sugar" })],
+      lines: [
+        line("m-margherita", 1, { Base: "Thin crust" }),
+        line("m-cappuccino", 2, { Milk: "Full cream" }),
+      ],
       status: "preparing",
       ago: 6 * min,
-      note: "One of the filters to go, please",
+      note: "One cappuccino without sugar, please",
       guest: { name: "Gurpreet" },
     },
     {
       table: "07",
       lines: [
-        line("m-kulcha-toastie", 1, { Heat: "Extra chilli" }),
-        line("m-shikanji", 1, { Style: "Salted" }),
+        line("m-alfredo", 1, { Pasta: "Penne", Add: "Chicken" }),
+        line("m-virgin-mojito", 1, { Flavour: "Green apple" }),
       ],
       status: "preparing",
       ago: 11 * min,
     },
     {
       table: "TA",
-      lines: [line("m-cold-brew", 2, { Milk: "Oat" })],
+      lines: [line("m-cold-brew", 2, { Milk: "Black" })],
       status: "ready",
       ago: 4 * min,
       orderType: "takeaway",
@@ -239,7 +246,7 @@ function seedOrders(now: number): Order[] {
     },
     {
       table: "02",
-      lines: [line("m-basque", 2), line("m-cold-brew", 2, { Milk: "Oat" })],
+      lines: [line("m-brownie", 2), line("m-latte", 2, { Milk: "Oat", Sugar: "Less" })],
       status: "served",
       ago: 22 * min,
       billRequested: true,
@@ -247,20 +254,23 @@ function seedOrders(now: number): Order[] {
     },
     {
       table: "06",
-      lines: [line("m-keema-kulcha", 2), line("m-masala-chai", 2, { Strength: "Kadak" })],
+      lines: [
+        line("m-farmhouse", 1, { Base: "Cheese burst" }),
+        line("m-chilli-paneer", 1, { Style: "Dry" }),
+      ],
       status: "served",
       ago: 34 * min,
     },
     {
       table: "09",
-      lines: [line("m-coorg-pour", 1), line("m-pinni-cake", 1)],
+      lines: [line("m-tiramisu", 1), line("m-masala-chai", 2, { Strength: "Kadak" })],
       status: "paid",
       ago: 52 * min,
       paymentMethod: "upi",
     },
     {
       table: "05",
-      lines: [line("m-flat-white", 2), line("m-chilli-cheese", 1)],
+      lines: [line("m-club-sandwich", 2, { Filling: "Chicken" }), line("m-classic-fries", 1)],
       status: "paid",
       ago: 68 * min,
       paymentMethod: "card",
@@ -298,6 +308,9 @@ const STALE_KEYS = [
   "kahani.carts.v1",
   "kahani.orders.v2",
   "kahani.carts.v2",
+  "kahani.orders.v3",
+  "kahani.carts.v3",
+  "kahani.soldout.v3",
 ];
 
 function hydrate() {

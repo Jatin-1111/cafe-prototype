@@ -3,7 +3,7 @@
  * render the same squares — it is artwork, not a scannable code.
  */
 export function FauxQR({
-  seed = "kahani",
+  seed = "refections",
   size = 21,
   className = "",
 }: {

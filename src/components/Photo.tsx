@@ -13,6 +13,8 @@ type Props = {
    * file lands. Pass null when the caller sets an explicit height instead.
    */
   aspect?: string | null;
+  /** Arch-topped frame — the shape every niche and window in the room takes. */
+  arch?: boolean;
 };
 
 /**
@@ -20,13 +22,14 @@ type Props = {
  * the manifest, and a plate naming the missing shot until then — either way the
  * box occupies the same space, so dropping files in never reflows the page.
  */
-export function Photo({ shot, className = "", sizes, priority, aspect }: Props) {
+export function Photo({ shot, className = "", sizes, priority, aspect, arch }: Props) {
   const style =
     aspect === null ? undefined : { aspectRatio: aspect ?? `${shot.width} / ${shot.height}` };
+  const shape = arch ? "arch-top" : "rounded-card overflow-hidden";
 
   if (shot.ready) {
     return (
-      <div className={`relative overflow-hidden bg-bone ${className}`} style={style}>
+      <div className={`relative bg-sand ${shape} ${className}`} style={style}>
         <Image
           src={shotSrc(shot)}
           alt={shot.alt}
@@ -41,14 +44,14 @@ export function Photo({ shot, className = "", sizes, priority, aspect }: Props) 
 
   return (
     <div
-      className={`relative grid place-items-center bg-bone border border-dashed border-line ${className}`}
+      className={`relative grid place-items-center bg-sand-deep/50 border border-dashed border-ink/15 ${shape} ${className}`}
       style={style}
       role="img"
       aria-label={`Photograph pending: ${shot.alt}`}
     >
       <div className="text-center px-5 py-6">
         <p className="eyebrow">Photograph</p>
-        <p className="mt-2 font-display text-sm sm:text-base leading-tight tracking-tight text-ink-2">
+        <p className="mt-2 font-display text-sm sm:text-base leading-tight text-ink-2">
           {shot.caption}
         </p>
         <p className="mt-2 tnum text-[10px] uppercase tracking-[0.14em] text-muted">

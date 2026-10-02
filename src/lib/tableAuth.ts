@@ -20,7 +20,7 @@ import { isKnownTable, TABLES } from "@/lib/tables";
    ============================================================ */
 
 /** Cookie that binds a browser session to one table. */
-export const TABLE_COOKIE = "kahani_table";
+export const TABLE_COOKIE = "refections_table";
 
 /** A guest's session lasts a long sitting, not a whole day. */
 export const TABLE_COOKIE_MAX_AGE = 60 * 60 * 4;
@@ -35,7 +35,7 @@ function secret(): string {
       "[tableAuth] TABLE_SECRET is not set — table codes are using the shared demo secret.",
     );
   }
-  return "kahani-prototype-demo-secret-do-not-ship";
+  return "refections-prototype-demo-secret-do-not-ship";
 }
 
 /** Short, URL-safe key for a table's printed code. */

@@ -5,7 +5,7 @@ import { cafe } from "@/data/cafe";
 import { formatINR } from "@/data/menu";
 import { resetDemo, STATUS_LABEL } from "@/lib/orders";
 import { useMounted, useOrders } from "@/lib/useStore";
-import { CheckerRule } from "@/components/CheckerRule";
+import { ArcadeRule } from "@/components/ArcadeRule";
 import { FauxQR } from "@/components/FauxQR";
 
 const tables = Array.from({ length: cafe.tables }, (_, i) => String(i + 1).padStart(2, "0"));
@@ -46,7 +46,7 @@ export function DemoHub({ scanLinks }: { scanLinks: Record<string, string> }) {
 
   return (
     <div className="min-h-dvh bg-paper flex flex-col">
-      <CheckerRule size={8} />
+      <ArcadeRule size={20} />
 
       <div className="mx-auto max-w-5xl w-full px-5 sm:px-8 py-12 sm:py-16 flex-1">
         <div className="flex flex-wrap items-start justify-between gap-6">
@@ -64,9 +64,9 @@ export function DemoHub({ scanLinks }: { scanLinks: Record<string, string> }) {
           </div>
           <Link
             href="/"
-            className="shrink-0 font-display text-xl leading-none tracking-tight hover:text-brand transition-colors"
+            className="shrink-0 wordmark text-base leading-none hover:text-brand transition-colors"
           >
-            KAHANI
+            {cafe.name.toUpperCase()}
           </Link>
         </div>
 
@@ -98,7 +98,7 @@ export function DemoHub({ scanLinks }: { scanLinks: Record<string, string> }) {
                 <li key={table}>
                   <Link
                     href={scanLinks[table]}
-                    className={`block border-2 p-3 transition-colors ${
+                    className={`block rounded-card border-2 p-3 transition-colors ${
                       running
                         ? "border-brand bg-brand/5 hover:bg-brand/10"
                         : "border-line hover:border-ink"
@@ -119,7 +119,7 @@ export function DemoHub({ scanLinks }: { scanLinks: Record<string, string> }) {
             <li>
               <Link
                 href={scanLinks.TA}
-                className="block border-2 border-gold bg-gold/10 p-3 h-full hover:bg-gold/20 transition-colors"
+                className="block rounded-card border-2 border-brass bg-brass/10 p-3 h-full hover:bg-brass/20 transition-colors"
               >
                 <span className="font-display text-2xl leading-none">TA</span>
                 <span className="mt-2 block text-[10px] uppercase tracking-[0.12em] font-bold text-ink min-h-[1.1em]">
@@ -154,10 +154,10 @@ export function DemoHub({ scanLinks }: { scanLinks: Record<string, string> }) {
         </section>
 
         {/* ---------- QR + reset ---------- */}
-        <section className="mt-14 border border-line bg-cream p-6 sm:p-8 flex flex-wrap items-center gap-8 justify-between">
+        <section className="mt-14 rounded-card border border-line bg-cream p-6 sm:p-8 flex flex-wrap items-center gap-8 justify-between">
           <div className="flex items-center gap-6">
-            <div className="bg-paper border-4 border-ink p-3 shrink-0">
-              <FauxQR seed="kahani-table-07" className="w-24 h-24 text-ink" />
+            <div className="bg-paper rounded-card border-4 border-ink p-3 shrink-0">
+              <FauxQR seed="refections-table-07" className="w-24 h-24 text-ink" />
             </div>
             <div>
               <p className="eyebrow">On the marble</p>
@@ -176,7 +176,7 @@ export function DemoHub({ scanLinks }: { scanLinks: Record<string, string> }) {
             <button
               type="button"
               onClick={resetDemo}
-              className="h-11 px-6 border-2 border-ink text-xs font-bold uppercase tracking-[0.12em] hover:bg-ink hover:text-bone transition-colors"
+              className="h-11 px-6 border-2 border-ink text-xs font-bold uppercase tracking-[0.12em] hover:bg-ink hover:text-sand transition-colors"
             >
               Reset the demo
             </button>
@@ -187,7 +187,7 @@ export function DemoHub({ scanLinks }: { scanLinks: Record<string, string> }) {
         </section>
       </div>
 
-      <CheckerRule size={10} tone="teal" />
+      <ArcadeRule size={26} tone="jade" />
     </div>
   );
 }
@@ -206,7 +206,7 @@ function SurfaceCard({
   return (
     <Link
       href={href}
-      className="group border border-line bg-paper p-6 hover:border-ink transition-colors flex flex-col"
+      className="group rounded-card border border-line bg-paper p-6 hover:border-ink transition-colors flex flex-col"
     >
       <span className="eyebrow">{eyebrow}</span>
       <span className="mt-3 font-display text-xl leading-tight tracking-tight group-hover:text-brand transition-colors">

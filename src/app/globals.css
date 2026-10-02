@@ -1,76 +1,106 @@
 @import "tailwindcss";
 
 /* ============================================================
-   Kahani Coffee House — design tokens
-   Direction: "D + C hybrid"
-   Palette and motifs from the retro cafe direction; spacing,
-   hairlines and square corners from the editorial one. The grid
-   band doubles as a nod to Chandigarh's sector plan.
+   Refections Cafe — design tokens
+   SCO 473-474, Sector 35C, Chandigarh
+
+   Drawn from the room itself: arched plaster niches washed in
+   terracotta, rose and jade velvet, blush florals, brass mesh,
+   speckled terrazzo and warm sand walls. The wordmark on the back
+   wall is thin, wide-tracked caps, so the display type follows it.
+
+   Shape language is arches and soft edges throughout — the
+   opposite of a grid. Nothing here is square by accident.
    ============================================================ */
 
 @theme {
-  /* Brand */
-  --color-brand: #1e5d59;
-  --color-brand-deep: #143f3c;
-  --color-brand-soft: #2e7a75;
-  --color-gold: #d9a123;
-  --color-gold-soft: #e9c46a;
-  --color-clay: #7a2e2a;
+  /* Brand — the terracotta arch niches behind the counter */
+  --color-brand: #bc5228;
+  --color-brand-deep: #93391a;
+  --color-brand-soft: #d4805a;
 
-  /* Grounds — warm neutrals biased toward the bone in the palette */
-  --color-paper: #fcf9f1;
-  --color-cream: #f7f1e2;
-  --color-bone: #efe7d4;
-  --color-bone-deep: #e4d9c0;
+  /* The jade velvet banquette */
+  --color-jade: #1f6b56;
+  --color-jade-soft: #4e9880;
 
-  /* Ink */
-  --color-ink: #20211d;
-  --color-ink-2: #4e4a3c;
-  --color-muted: #857c67;
+  /* Blush — the floral chairs and rose seating */
+  --color-blush: #dfa7a2;
+  --color-blush-soft: #f0cfcb;
+  --color-wine: #a33244;
+
+  /* Brass mesh, mirror frames, pendant glass */
+  --color-brass: #c08a4a;
+  --color-brass-soft: #ddb47c;
+
+  /* Grounds — warm sand plaster, lightest first */
+  --color-paper: #fdf8f2;
+  --color-cream: #f8ede0;
+  --color-sand: #f1e2d0;
+  --color-sand-deep: #e5d2bc;
+
+  /* Ink — warm brown, never black */
+  --color-ink: #3b2a23;
+  --color-ink-2: #6e564a;
+  --color-muted: #9c8574;
 
   /* Rules */
-  --color-line: #d6cbaf;
-  --color-line-soft: #e7ddc6;
+  --color-line: #e2ceb8;
+  --color-line-soft: #efe3d4;
 
-  /* Status — semantic, deliberately separate from the brand accent */
-  --color-status-new: #7a2e2a;
-  --color-status-prep: #d9a123;
-  --color-status-ready: #1e5d59;
-  --color-status-done: #857c67;
+  /* Status — semantic, deliberately distinct from the terracotta accent */
+  --color-status-new: #a33244;
+  --color-status-prep: #c08a4a;
+  --color-status-ready: #1f6b56;
+  --color-status-done: #9c8574;
 
   /* Type */
-  --font-display: var(--font-alfa), Georgia, serif;
-  --font-body: var(--font-cabin), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-marcellus), Georgia, serif;
+  --font-body: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
 
-  /* The whole system is square. No radius scale by design. */
-  --radius-none: 0px;
+  /* Shape — arches and pills, nothing hard */
+  --radius-control: 999px;
+  --radius-card: 14px;
+  --radius-sm: 8px;
 }
 
 /* ------------------------------------------------------------
    Base
    ------------------------------------------------------------ */
 
-html {
-  -webkit-text-size-adjust: 100%;
-}
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
 
-body {
-  background: var(--color-paper);
-  color: var(--color-ink);
-  font-family: var(--font-body);
-  font-size: 16px;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-}
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
 
-::selection {
-  background: var(--color-gold);
-  color: var(--color-ink);
-}
+  ::selection {
+    background: var(--color-blush);
+    color: var(--color-ink);
+  }
 
-:focus-visible {
-  outline: 2px solid var(--color-brand);
-  outline-offset: 2px;
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+
+  /* Controls are pills by default. In @layer base so a rounded-* utility still wins. */
+  button,
+  input,
+  select {
+    border-radius: var(--radius-control);
+  }
+
+  textarea {
+    border-radius: var(--radius-card);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -86,54 +116,97 @@ body {
 
 /* ------------------------------------------------------------
    Motifs
-   The checkerboard is the one loud element in the system. It marks
-   a real boundary — top of page, end of a section — and is never
-   used as filler.
    ------------------------------------------------------------ */
 
-.checker {
-  background: repeating-conic-gradient(
-      var(--color-ink) 0% 25%,
-      var(--color-bone) 0% 50%
-    )
-    0 0 / var(--checker-size, 10px) var(--checker-size, 10px);
+/**
+ * The arcade. A band of arches lifted straight off the niche wall
+ * behind the counter. Reserved for real boundaries — top of page,
+ * end of a section — never used as filler.
+ */
+.arcade {
+  --arch: 26px;
+  height: var(--arch);
+  background:
+    radial-gradient(
+        circle at 50% 50%,
+        currentColor 0 calc(var(--arch) * 0.38),
+        transparent calc(var(--arch) * 0.38 + 0.5px)
+      )
+      0 0 / var(--arch) var(--arch) repeat-x,
+    linear-gradient(currentColor, currentColor) 0 100% / 100% 50% no-repeat;
 }
 
-.checker-teal {
-  background: repeating-conic-gradient(
-      var(--color-brand) 0% 25%,
-      var(--color-bone) 0% 50%
-    )
-    0 0 / var(--checker-size, 10px) var(--checker-size, 10px);
+/** An arch-topped frame — the shape every photo and niche in the room takes. */
+.arch-top {
+  border-radius: 9999px 9999px var(--radius-card) var(--radius-card);
+  overflow: hidden;
 }
 
-/* Faint woven texture, the way old cafe menu card stock reads */
-.grain {
+/**
+ * Terrazzo. The floor and the half-wall are speckled with it, so it
+ * stands in for a flat tint on the quieter sections.
+ */
+.terrazzo {
   position: relative;
 }
-.grain::after {
+.terrazzo::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: repeating-linear-gradient(
-      45deg,
-      rgba(122, 46, 42, 0.035) 0 1px,
-      transparent 1px 6px
-    ),
-    repeating-linear-gradient(
-      -45deg,
-      rgba(30, 93, 89, 0.03) 0 1px,
-      transparent 1px 7px
-    );
+  opacity: 0.5;
+  /* Each fleck layer gets its own tile size so the repeat never lines up
+     into a visible grid — the giveaway that turns terrazzo into polka dots. */
+  background-image:
+    radial-gradient(ellipse 5px 3px at 14% 21%, rgba(188, 82, 40, 0.22) 0 100%, transparent 0),
+    radial-gradient(ellipse 3px 5px at 68% 11%, rgba(31, 107, 86, 0.18) 0 100%, transparent 0),
+    radial-gradient(ellipse 4px 2px at 37% 64%, rgba(163, 50, 68, 0.16) 0 100%, transparent 0),
+    radial-gradient(ellipse 2px 4px at 86% 58%, rgba(192, 138, 74, 0.2) 0 100%, transparent 0),
+    radial-gradient(ellipse 6px 3px at 52% 87%, rgba(59, 42, 35, 0.12) 0 100%, transparent 0),
+    radial-gradient(ellipse 3px 3px at 21% 92%, rgba(31, 107, 86, 0.14) 0 100%, transparent 0),
+    radial-gradient(ellipse 4px 3px at 77% 34%, rgba(188, 82, 40, 0.14) 0 100%, transparent 0),
+    radial-gradient(ellipse 2px 3px at 6% 51%, rgba(192, 138, 74, 0.16) 0 100%, transparent 0);
+  background-size:
+    341px 293px,
+    227px 419px,
+    503px 271px,
+    389px 337px,
+    293px 457px,
+    461px 311px,
+    367px 239px,
+    257px 383px;
 }
 
-/* Eyebrow / label treatment used across all three surfaces */
+/* Soft plaster wash, the way the walls catch light */
+.plaster {
+  position: relative;
+}
+.plaster::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 80% at 15% 0%, rgba(192, 138, 74, 0.1), transparent 60%),
+    radial-gradient(90% 70% at 95% 100%, rgba(223, 167, 162, 0.12), transparent 65%);
+}
+
+/* The wordmark treatment, echoing the backlit letters on the counter wall */
+.wordmark {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  font-weight: 400;
+  /* Tracking leaves a gap after the last letter. Pulling it off the box keeps
+     the mark optically centred without nudging left-aligned instances right. */
+  margin-right: -0.3em;
+}
+
 .eyebrow {
   font-size: 0.6875rem;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--color-muted);
 }
 

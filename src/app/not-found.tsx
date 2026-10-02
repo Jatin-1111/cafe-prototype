@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { CheckerRule } from "@/components/CheckerRule";
+import { ArcadeRule } from "@/components/ArcadeRule";
 
 export default function NotFound() {
   return (
     <div className="min-h-dvh bg-paper flex flex-col">
-      <CheckerRule size={8} />
+      <ArcadeRule size={20} />
       <div className="flex-1 grid place-items-center px-5 py-20">
         <div className="text-center max-w-md">
           <p className="eyebrow">Nothing here</p>
@@ -17,20 +17,20 @@ export default function NotFound() {
           <div className="mt-9 flex flex-wrap gap-3 justify-center">
             <Link
               href="/"
-              className="inline-flex items-center h-12 px-7 bg-ink text-bone text-xs font-bold uppercase tracking-[0.14em] hover:bg-brand transition-colors"
+              className="inline-flex items-center h-12 px-8 rounded-full bg-ink text-cream text-xs font-semibold uppercase tracking-[0.14em] hover:bg-brand transition-colors"
             >
               Back to the front
             </Link>
             <Link
               href="/menu"
-              className="inline-flex items-center h-12 px-7 border-2 border-ink text-xs font-bold uppercase tracking-[0.14em] hover:bg-ink hover:text-bone transition-colors"
+              className="inline-flex items-center h-12 px-8 rounded-full border border-ink/30 text-xs font-semibold uppercase tracking-[0.14em] hover:bg-ink hover:text-cream hover:border-ink transition-colors"
             >
               See the menu
             </Link>
           </div>
         </div>
       </div>
-      <CheckerRule size={10} tone="teal" />
+      <ArcadeRule size={26} tone="jade" />
     </div>
   );
 }

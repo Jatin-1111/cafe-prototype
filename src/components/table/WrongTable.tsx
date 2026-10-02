@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { cafe } from "@/data/cafe";
 import { tableLabel } from "@/lib/tables";
-import { CheckerRule } from "@/components/CheckerRule";
+import { ArcadeRule } from "@/components/ArcadeRule";
 
 /**
  * Shown when a browser reaches a table it has not scanned into — a typed URL,
@@ -9,15 +10,15 @@ import { CheckerRule } from "@/components/CheckerRule";
  */
 export function WrongTable({ table, boundTo }: { table: string; boundTo?: string }) {
   return (
-    <div className="min-h-dvh bg-bone flex flex-col">
+    <div className="min-h-dvh bg-sand flex flex-col">
       <div className="w-full max-w-md mx-auto flex-1 bg-paper border-x border-line min-h-dvh">
-        <CheckerRule size={8} />
+        <ArcadeRule size={20} />
         <div className="px-4 pt-3 flex items-center justify-between">
-          <span className="inline-flex items-center h-6 px-2.5 border border-line text-muted text-[10px] font-bold uppercase tracking-[0.14em]">
+          <span className="inline-flex items-center h-6 px-3 rounded-full border border-line text-muted text-[10px] font-semibold uppercase tracking-[0.14em]">
             Not scanned in
           </span>
-          <Link href="/" className="font-display text-base leading-none tracking-tight">
-            KAHANI
+          <Link href="/" className="wordmark text-sm leading-none">
+            {cafe.name.toUpperCase()}
           </Link>
         </div>
 
@@ -39,7 +40,7 @@ export function WrongTable({ table, boundTo }: { table: string; boundTo?: string
           {boundTo ? (
             <Link
               href={`/t/${boundTo}`}
-              className="mt-8 inline-flex items-center h-12 px-7 bg-ink text-bone text-xs font-bold uppercase tracking-[0.14em] hover:bg-brand transition-colors"
+              className="mt-8 inline-flex items-center h-12 px-8 rounded-full bg-ink text-cream text-xs font-semibold uppercase tracking-[0.14em] hover:bg-brand transition-colors"
             >
               Back to {tableLabel(boundTo).toLowerCase()}
             </Link>
@@ -52,7 +53,7 @@ export function WrongTable({ table, boundTo }: { table: string; boundTo?: string
             </p>
             <Link
               href="/demo"
-              className="mt-4 inline-flex items-center h-11 px-6 border-2 border-ink text-xs font-bold uppercase tracking-[0.14em] hover:bg-ink hover:text-bone transition-colors"
+              className="mt-4 inline-flex items-center h-11 px-6 rounded-full border border-ink/30 text-xs font-semibold uppercase tracking-[0.14em] hover:bg-ink hover:text-cream hover:border-ink transition-colors"
             >
               Open the demo hub
             </Link>

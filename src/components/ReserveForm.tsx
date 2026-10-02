@@ -24,7 +24,7 @@ export function ReserveForm() {
 
   if (booking) {
     return (
-      <div className="border border-brand bg-brand text-cream p-8">
+      <div className="rounded-card bg-brand text-cream p-8 sm:p-10">
         <p className="eyebrow text-cream/60">Table held</p>
         <p className="font-display text-2xl mt-3 leading-tight">
           See you {booking.when.toLowerCase()}, {booking.name.split(" ")[0]}.
@@ -34,12 +34,12 @@ export function ReserveForm() {
           that, call the counter and we will do our best.
         </p>
         <p className="mt-6 eyebrow text-cream/60">
-          Reference <span className="text-gold-soft tnum">{booking.ref}</span>
+          Reference <span className="text-brass-soft tnum">{booking.ref}</span>
         </p>
         <button
           type="button"
           onClick={() => setBooking(null)}
-          className="mt-6 text-sm font-semibold underline underline-offset-4 text-cream/80 hover:text-gold-soft transition-colors"
+          className="mt-6 text-sm font-semibold underline underline-offset-4 text-cream/80 hover:text-brass-soft transition-colors"
         >
           Book another table
         </button>
@@ -137,7 +137,7 @@ export function ReserveForm() {
       <div className="sm:col-span-2 flex flex-wrap items-center gap-4">
         <button
           type="submit"
-          className="inline-flex items-center justify-center h-12 px-8 bg-ink text-bone font-semibold tracking-wide hover:bg-brand transition-colors"
+          className="inline-flex items-center justify-center h-12 px-8 rounded-full bg-brand text-cream font-medium tracking-wide hover:bg-brand-deep transition-colors"
         >
           Request the table
         </button>

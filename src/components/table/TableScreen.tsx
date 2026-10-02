@@ -24,7 +24,7 @@ import {
 } from "@/lib/orders";
 import { useCart, useMounted, useOrders, useSoldOut } from "@/lib/useStore";
 import { VegMark } from "@/components/VegMark";
-import { CheckerRule } from "@/components/CheckerRule";
+import { ArcadeRule } from "@/components/ArcadeRule";
 import { Sheet } from "@/components/table/Sheet";
 
 export function TableScreen({ table }: { table: string }) {
@@ -34,7 +34,7 @@ export function TableScreen({ table }: { table: string }) {
   const orders = useOrders();
   const soldOut = useSoldOut();
 
-  const [active, setActive] = useState<CategoryId>("brew");
+  const [active, setActive] = useState<CategoryId>("coffee");
   const [optionFor, setOptionFor] = useState<MenuItem | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [flash, setFlash] = useState<string | null>(null);
@@ -57,13 +57,13 @@ export function TableScreen({ table }: { table: string }) {
   }
 
   return (
-    <div className="min-h-dvh bg-bone flex flex-col">
+    <div className="min-h-dvh bg-sand flex flex-col">
       <div className="w-full max-w-md mx-auto flex-1 flex flex-col bg-paper border-x border-line min-h-dvh">
         {/* ---------- Header ---------- */}
         <header className="sticky top-0 z-30 bg-paper">
-          <CheckerRule size={8} />
+          <ArcadeRule size={20} />
           <div className="px-4 pt-3 flex items-center justify-between gap-3">
-            <span className="inline-flex items-center h-6 px-2.5 bg-brand text-cream text-[10px] font-bold uppercase tracking-[0.14em]">
+            <span className="inline-flex items-center h-6 px-3 rounded-full bg-brand text-cream text-[10px] font-semibold uppercase tracking-[0.14em]">
               {spotLabel}
             </span>
             <span className="text-[10px] uppercase tracking-[0.14em] text-muted">
@@ -75,13 +75,13 @@ export function TableScreen({ table }: { table: string }) {
             <p className="text-[9px] uppercase tracking-[0.22em] text-muted">
               Est. {cafe.established} · {cafe.city}
             </p>
-            <p className="font-display text-2xl mt-1.5 leading-none tracking-tight">
+            <p className="wordmark text-lg mt-2 leading-none">
               {cafe.name.toUpperCase()}
             </p>
           </div>
 
           <nav
-            className="flex gap-5 px-4 border-b border-line overflow-x-auto"
+            className="flex gap-5 px-4 border-b border-line overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             aria-label="Menu sections"
           >
             {categories.map((category) => (
@@ -90,9 +90,9 @@ export function TableScreen({ table }: { table: string }) {
                 type="button"
                 onClick={() => setActive(category.id)}
                 aria-current={active === category.id}
-                className={`shrink-0 pb-2.5 text-[11px] uppercase tracking-[0.12em] font-semibold border-b-2 -mb-px transition-colors ${
+                className={`shrink-0 rounded-none pb-2.5 text-[11px] uppercase tracking-[0.12em] font-semibold border-b-2 -mb-px transition-colors ${
                   active === category.id
-                    ? "text-ink border-gold"
+                    ? "text-ink border-brass"
                     : "text-muted border-transparent hover:text-ink"
                 }`}
               >
@@ -109,7 +109,7 @@ export function TableScreen({ table }: { table: string }) {
               <Link
                 key={order.id}
                 href={`/t/${table}/order/${order.id}`}
-                className="flex items-center justify-between gap-3 border border-brand bg-brand/5 px-3 py-2.5 mb-2 hover:bg-brand/10 transition-colors"
+                className="flex items-center justify-between gap-3 rounded-full border border-brand/40 bg-brand/5 px-4 py-2.5 mb-2 hover:bg-brand/10 transition-colors"
               >
                 <span className="text-xs">
                   <span className="font-semibold text-brand">{order.code}</span>
@@ -162,7 +162,7 @@ export function TableScreen({ table }: { table: string }) {
                     className={`shrink-0 mt-1 h-9 px-4 border-2 border-ink text-xs font-bold uppercase tracking-[0.1em] transition-colors ${
                       flash === item.id
                         ? "bg-brand border-brand text-cream"
-                        : "bg-paper text-ink hover:bg-ink hover:text-bone"
+                        : "bg-paper text-ink hover:bg-ink hover:text-sand"
                     }`}
                   >
                     {flash === item.id ? "Added" : "Add"}
@@ -187,7 +187,7 @@ export function TableScreen({ table }: { table: string }) {
             <button
               type="button"
               onClick={() => setCartOpen(true)}
-              className="w-full flex items-center justify-between gap-4 bg-clay text-cream px-4 h-14 font-semibold hover:bg-ink transition-colors"
+              className="w-full flex items-center justify-between gap-4 bg-wine text-cream px-4 h-14 font-semibold hover:bg-ink transition-colors"
             >
               <span className="tnum text-sm">
                 {count} {count === 1 ? "item" : "items"} · {formatINR(total)}
@@ -285,7 +285,7 @@ function OptionSheet({
         <button
           type="button"
           onClick={() => onAdd(picked)}
-          className="w-full py-4 bg-ink text-bone font-bold uppercase tracking-[0.14em] text-xs hover:bg-brand transition-colors"
+          className="w-full py-4 bg-ink text-sand font-bold uppercase tracking-[0.14em] text-xs hover:bg-brand transition-colors"
         >
           Add · {formatINR(item.price)}
         </button>
@@ -362,11 +362,11 @@ function CheckoutSheet({
                   <p className="mt-1 tnum text-xs text-muted">{formatINR(line.price)} each</p>
                 </div>
 
-                <div className="flex items-center shrink-0 self-start border border-line">
+                <div className="flex items-center shrink-0 self-start rounded-full border border-line overflow-hidden">
                   <button
                     type="button"
                     onClick={() => setLineQty(table, index, line.qty - 1)}
-                    className="w-9 h-9 grid place-items-center text-ink hover:bg-bone transition-colors"
+                    className="w-9 h-9 grid place-items-center text-ink hover:bg-sand transition-colors"
                     aria-label={`One less ${line.name}`}
                   >
                     –
@@ -375,7 +375,7 @@ function CheckoutSheet({
                   <button
                     type="button"
                     onClick={() => setLineQty(table, index, line.qty + 1)}
-                    className="w-9 h-9 grid place-items-center text-ink hover:bg-bone transition-colors"
+                    className="w-9 h-9 grid place-items-center text-ink hover:bg-sand transition-colors"
                     aria-label={`One more ${line.name}`}
                   >
                     +
@@ -471,7 +471,7 @@ function CheckoutSheet({
           type="button"
           onClick={send}
           disabled={!canSend || sending}
-          className="w-full py-4 bg-clay text-cream font-bold uppercase tracking-[0.14em] text-xs hover:bg-ink transition-colors disabled:opacity-40 disabled:hover:bg-clay"
+          className="w-full py-4 bg-wine text-cream font-bold uppercase tracking-[0.14em] text-xs hover:bg-ink transition-colors disabled:opacity-40 disabled:hover:bg-wine"
         >
           {sending ? "Sending…" : "Send to the counter"}
         </button>
