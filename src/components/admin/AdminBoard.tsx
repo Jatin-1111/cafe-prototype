@@ -13,6 +13,7 @@ import {
   resetDemo,
   STATUS_ACTION,
   STATUS_LABEL,
+  isOpen,
   toggleSoldOut,
   type Order,
   type OrderStatus,
@@ -29,6 +30,7 @@ const laneBar: Record<OrderStatus, string> = {
   ready: "bg-status-ready",
   served: "bg-ink",
   paid: "bg-status-done",
+  cancelled: "bg-muted",
 };
 
 /** Minutes after which a ticket in this lane needs attention. */
@@ -71,23 +73,24 @@ export function AdminBoard() {
   const closed = useMemo(
     () =>
       orders
-        .filter((order) => order.status === "paid")
+        .filter((order) => order.status === "paid" || order.status === "cancelled")
         .sort((a, b) => (b.paidAt ?? b.updatedAt) - (a.paidAt ?? a.updatedAt)),
     [orders],
   );
 
   const stats = useMemo(() => {
-    const open = orders.filter((order) => order.status !== "paid");
+    const open = orders.filter(isOpen);
     const paid = orders.filter((order) => order.status === "paid");
     return {
       open: open.length,
       kitchen: orders.filter((order) => order.status === "preparing").length,
       bills: orders.filter((order) => order.billRequested).length,
-      covers: new Set(orders.filter((o) => o.orderType === "table").map((o) => o.table)).size,
-      items: orders.reduce(
-        (sum, order) => sum + order.lines.reduce((n, line) => n + line.qty, 0),
-        0,
-      ),
+      covers: new Set(
+        orders.filter((o) => o.orderType === "table" && o.status !== "cancelled").map((o) => o.table),
+      ).size,
+      items: orders
+        .filter((order) => order.status !== "cancelled")
+        .reduce((sum, order) => sum + order.lines.reduce((n, line) => n + line.qty, 0), 0),
       taken: paid.reduce((sum, order) => sum + order.total, 0),
       outstanding: open.reduce((sum, order) => sum + order.total, 0),
     };
@@ -229,12 +232,20 @@ export function AdminBoard() {
                           {order.guest?.name ? ` · ${order.guest.name}` : ""}
                         </span>
                         <span className="ml-auto text-xs text-muted">
-                          {order.paymentMethod ? PAYMENT_LABEL[order.paymentMethod] : "—"}
+                          {order.status === "cancelled"
+                            ? "Cancelled"
+                            : order.paymentMethod
+                              ? PAYMENT_LABEL[order.paymentMethod]
+                              : "—"}
                         </span>
                         <span className="tnum text-xs text-muted w-16 text-right">
                           {order.paidAt ? clockTime(order.paidAt) : "—"}
                         </span>
-                        <span className="tnum font-semibold w-20 text-right">
+                        <span
+                          className={`tnum font-semibold w-20 text-right ${
+                            order.status === "cancelled" ? "text-muted line-through" : ""
+                          }`}
+                        >
                           {formatINR(order.total)}
                         </span>
                       </li>
@@ -320,12 +331,24 @@ function Ticket({ order, now }: { order: Order; now: number }) {
             {order.orderType === "takeaway" ? "Takeaway" : `Table ${order.table}`}
           </span>
         </div>
-        <span
-          className={`tnum text-xs font-semibold shrink-0 ${
-            veryLate ? "text-status-new" : late ? "text-[#8a6410]" : "text-muted"
-          }`}
-        >
-          {now ? elapsed(order.placedAt, now) : "—"}
+        <span className="flex items-baseline gap-2 shrink-0">
+          {order.readyBy && order.status !== "served" ? (
+            <span
+              className={`tnum text-[11px] ${
+                now && now > order.readyBy ? "text-status-new font-semibold" : "text-muted"
+              }`}
+              title="Time quoted to the guest"
+            >
+              due {clockTime(order.readyBy)}
+            </span>
+          ) : null}
+          <span
+            className={`tnum text-xs font-semibold ${
+              veryLate ? "text-status-new" : late ? "text-[#8a6410]" : "text-muted"
+            }`}
+          >
+            {now ? elapsed(order.placedAt, now) : "—"}
+          </span>
         </span>
       </div>
 

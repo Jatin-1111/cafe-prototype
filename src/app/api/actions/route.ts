@@ -4,6 +4,7 @@ import { isKnownTable } from "@/lib/tables";
 import { TABLE_COOKIE, sessionOwnsTable } from "@/lib/tableAuth";
 import {
   advanceOrder,
+  cancelOrder,
   getState,
   markPaid,
   placeOrder,
@@ -29,6 +30,7 @@ type Action =
   | { type: "advance"; id: string }
   | { type: "status"; id: string; status: OrderStatus }
   | { type: "bill"; id: string }
+  | { type: "cancel"; id: string }
   | { type: "pay"; id: string; method: PaymentMethod }
   | { type: "soldOut"; itemId: string }
   | { type: "reset" };
@@ -73,6 +75,16 @@ export async function POST(request: NextRequest) {
       case "advance":
         await advanceOrder(action.id);
         break;
+      case "cancel": {
+        const result = await cancelOrder(action.id);
+        if (!result.ok) {
+          return NextResponse.json(
+            { error: result.reason, state: await getState() },
+            { status: 409 },
+          );
+        }
+        break;
+      }
       case "status":
         await setOrderStatus(action.id, action.status);
         break;

@@ -1,9 +1,11 @@
 import "server-only";
 
 import type { Collection } from "mongodb";
+import { menuById, prepMinutesFor } from "@/data/menu";
 import { getDb } from "@/lib/db";
 import { SEED_SOLD_OUT, seedOrders } from "@/lib/seed";
 import {
+  CANCEL_WINDOW_MS,
   STATUS_FLOW,
   cartTotal,
   type Guest,
@@ -69,6 +71,20 @@ export async function getState(): Promise<ServerState> {
   return { orders: rows as Order[], soldOut: state?.soldOut ?? [] };
 }
 
+/**
+ * When the kitchen should have this at the pass. The slowest item sets the
+ * floor; everything already in the kitchen pushes it out a little, so a guest
+ * ordering into a rush is told the truth rather than the best case.
+ */
+function estimateReadyBy(lines: OrderLine[], now: number, queueAhead: number): number {
+  const slowest = lines.reduce((max, line) => {
+    const item = menuById.get(line.itemId);
+    return item ? Math.max(max, prepMinutesFor(item)) : max;
+  }, 4);
+  const queuePenalty = Math.min(10, Math.floor(queueAhead / 2) * 2);
+  return now + (slowest + queuePenalty) * 60_000;
+}
+
 /** Order numbers come from a counter so two phones can never collide on one. */
 async function nextCode(): Promise<string> {
   const result = await (await meta()).findOneAndUpdate(
@@ -94,6 +110,10 @@ export async function placeOrder(input: {
   if (!lines.length) return null;
 
   const now = Date.now();
+  const kitchenLoad = (await getState()).orders.filter(
+    (o) => o.status === "new" || o.status === "preparing",
+  ).length;
+
   const order: Order = {
     id: `o-${now}-${Math.round(Math.random() * 9973)}`,
     code: await nextCode(),
@@ -106,6 +126,7 @@ export async function placeOrder(input: {
     placedAt: now,
     updatedAt: now,
     note: input.note?.trim() || undefined,
+    readyBy: estimateReadyBy(lines, now, kitchenLoad),
   };
 
   await (await orders()).insertOne({ ...order, _id: order.id });
@@ -149,6 +170,30 @@ export async function markPaid(id: string, method: PaymentMethod): Promise<void>
       },
     },
   );
+}
+
+/**
+ * The guest pulling an order back. Only from `new`, only inside the window —
+ * both checked here rather than in the browser, since the browser's clock and
+ * its idea of the status are both things a guest could lean on.
+ */
+export async function cancelOrder(id: string): Promise<{ ok: boolean; reason?: string }> {
+  const col = await orders();
+  const current = await col.findOne({ _id: id }, { projection: { status: 1, placedAt: 1 } });
+  if (!current) return { ok: false, reason: "That order is no longer here." };
+
+  if (current.status !== "new") {
+    return { ok: false, reason: "The kitchen has already started this one." };
+  }
+  if (Date.now() - current.placedAt > CANCEL_WINDOW_MS) {
+    return { ok: false, reason: "Too late to cancel from here — ask the counter." };
+  }
+
+  await col.updateOne(
+    { _id: id, status: "new" },
+    { $set: { status: "cancelled", cancelledAt: Date.now(), updatedAt: Date.now() } },
+  );
+  return { ok: true };
 }
 
 export async function toggleSoldOut(itemId: string): Promise<void> {

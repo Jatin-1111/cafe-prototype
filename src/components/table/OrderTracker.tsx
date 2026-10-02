@@ -1,11 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cafe } from "@/data/cafe";
 import { formatINR } from "@/data/menu";
 import {
+  CANCEL_WINDOW_MS,
+  canCancel,
+  cancelOrder,
   clockTime,
+  etaCopy,
   elapsed,
   guestStage,
   guestStagesFor,
@@ -16,15 +20,47 @@ import {
   type Order,
 } from "@/lib/orders";
 import { useMounted, useNow, useOrder } from "@/lib/useStore";
+import type { OrderStatus } from "@/lib/orderTypes";
 import { ArcadeRule } from "@/components/ArcadeRule";
 import { FauxQR } from "@/components/FauxQR";
 import { Sheet } from "@/components/table/Sheet";
+
+/**
+ * Buzzes and marks the tab the moment an order is ready. A guest's phone is
+ * locked in their pocket by then, so a status that only changes on screen is a
+ * status nobody sees.
+ */
+function useReadyAlert(status: OrderStatus | undefined) {
+  const previous = useRef<OrderStatus | undefined>(undefined);
+
+  useEffect(() => {
+    const was = previous.current;
+    previous.current = status;
+    if (status !== "ready" || was === undefined || was === "ready") return;
+
+    navigator.vibrate?.([180, 90, 180]);
+
+    const original = document.title;
+    document.title = "● Ready — your order";
+    const restore = () => {
+      if (document.visibilityState === "visible") document.title = original;
+    };
+    document.addEventListener("visibilitychange", restore);
+    return () => {
+      document.removeEventListener("visibilitychange", restore);
+      document.title = original;
+    };
+  }, [status]);
+}
 
 export function OrderTracker({ table, id }: { table: string; id: string }) {
   const mounted = useMounted();
   const order = useOrder(id);
   const now = useNow();
   const [payOpen, setPayOpen] = useState(false);
+  const [cancelNote, setCancelNote] = useState<string | null>(null);
+
+  useReadyAlert(order?.status);
 
   if (!mounted) {
     return (
@@ -62,11 +98,37 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
     );
   }
 
+  if (order.status === "cancelled") {
+    return (
+      <Shell table={table}>
+        <div className="px-5 py-16 text-center">
+          <p className="eyebrow">Order {order.code}</p>
+          <h1 className="mt-4 font-display text-3xl leading-tight">Cancelled</h1>
+          <p className="mt-4 text-sm text-ink-2 max-w-[32ch] mx-auto leading-relaxed">
+            Nothing was sent to the kitchen and there is nothing to pay.
+          </p>
+          <Link
+            href={`/t/${table}`}
+            className="mt-8 inline-flex items-center h-12 px-8 rounded-full bg-ink text-cream text-xs font-semibold uppercase tracking-[0.14em] hover:bg-brand transition-colors"
+          >
+            Order again
+          </Link>
+        </div>
+      </Shell>
+    );
+  }
+
   const stages = guestStagesFor(order.orderType);
   const stage = guestStage(order.status);
   const current = stages[stage];
   const settled = order.status === "served";
   const takeaway = order.orderType === "takeaway";
+  const eta = etaCopy(order, now);
+  const cancellable = canCancel(order, now);
+  const cancelSecondsLeft = Math.max(
+    0,
+    Math.ceil((order.placedAt + CANCEL_WINDOW_MS - now) / 1000),
+  );
 
   return (
     <Shell table={table}>
@@ -81,6 +143,15 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
         <p className="mt-3 text-sm text-ink-2 max-w-[36ch] mx-auto leading-relaxed">
           {current.copy}
         </p>
+        {eta ? (
+          <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-brand/35 bg-brand/5 px-4 py-1.5">
+            <span className="text-sm font-semibold text-brand">{eta}</span>
+            {order.readyBy ? (
+              <span className="tnum text-xs text-muted">· by {clockTime(order.readyBy)}</span>
+            ) : null}
+          </p>
+        ) : null}
+
         <p className="mt-4 tnum text-[11px] uppercase tracking-[0.14em] text-muted">
           Placed {clockTime(order.placedAt)}
           {now ? ` · ${elapsed(order.placedAt, now)} ago` : ""}
@@ -165,6 +236,28 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
             {takeaway ? " been handed over." : " reached the table."}
           </p>
         )}
+
+        {cancellable ? (
+          <div className="mt-6 text-center">
+            <button
+              type="button"
+              onClick={async () => {
+                const ok = await cancelOrder(order.id);
+                if (!ok) setCancelNote("Too late — the kitchen has it. Ask the counter.");
+              }}
+              className="text-xs font-semibold uppercase tracking-[0.12em] text-wine underline underline-offset-4 hover:text-ink transition-colors"
+            >
+              Cancel this order
+            </button>
+            <p className="mt-2 tnum text-[11px] text-muted">
+              {cancelSecondsLeft}s left to change your mind
+            </p>
+          </div>
+        ) : null}
+
+        {cancelNote ? (
+          <p className="mt-4 text-[11px] text-center text-wine">{cancelNote}</p>
+        ) : null}
 
         <Link
           href={`/t/${table}`}

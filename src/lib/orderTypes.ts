@@ -6,8 +6,12 @@
    share one definition of what an order is.
    ============================================================ */
 
-/** Service state of an order. The guest-facing stepper collapses the last two. */
-export type OrderStatus = "new" | "preparing" | "ready" | "served" | "paid";
+/**
+ * Service state of an order. The guest-facing stepper collapses the last two.
+ * `cancelled` sits outside the flow: an order can only reach it from `new`,
+ * within the guest's short window to change their mind.
+ */
+export type OrderStatus = "new" | "preparing" | "ready" | "served" | "paid" | "cancelled";
 
 export type PaymentMethod = "upi" | "card" | "cash";
 
@@ -25,6 +29,7 @@ export const STATUS_LABEL: Record<OrderStatus, string> = {
   ready: "Ready",
   served: "To settle",
   paid: "Closed",
+  cancelled: "Cancelled",
 };
 
 /** What the button that advances an order should say, per status. */
@@ -34,6 +39,7 @@ export const STATUS_ACTION: Record<OrderStatus, string | null> = {
   ready: "Hand to table",
   served: null, // settled with a payment method instead
   paid: null,
+  cancelled: null,
 };
 
 export const PAYMENT_LABEL: Record<PaymentMethod, string> = {
@@ -90,7 +96,36 @@ export type Order = {
   billRequested?: boolean;
   paidAt?: number;
   paymentMethod?: PaymentMethod;
+  /** When the kitchen expects this at the pass. Set once, at placement. */
+  readyBy?: number;
+  cancelledAt?: number;
 };
+
+/** How long a guest has to pull an order back after sending it. */
+export const CANCEL_WINDOW_MS = 120_000;
+
+export function cancellableUntil(order: Order): number {
+  return order.placedAt + CANCEL_WINDOW_MS;
+}
+
+export function canCancel(order: Order, now: number): boolean {
+  return order.status === "new" && now > 0 && now < cancellableUntil(order);
+}
+
+/**
+ * Wording for the wait. Deliberately vague near the end — a countdown that
+ * hits zero and keeps going is worse than no countdown at all.
+ */
+export function etaCopy(order: Order, now: number): string | null {
+  if (!order.readyBy || !now) return null;
+  if (order.status === "ready" || order.status === "served" || order.status === "paid") return null;
+  if (order.status === "cancelled") return null;
+
+  const minutes = Math.round((order.readyBy - now) / 60_000);
+  if (minutes <= 0) return "Any moment now";
+  if (minutes === 1) return "About a minute";
+  return `About ${minutes} minutes`;
+}
 
 /** GST is baked into the shelf price — the receipt shows what was included. */
 export const GST_RATE = 0.05;
@@ -112,9 +147,14 @@ export function cartCount(lines: OrderLine[]) {
 
 /** How far along the guest-facing stepper this order is. */
 export function guestStage(status: OrderStatus) {
-  return status === "paid"
-    ? GUEST_STAGES.length - 1
-    : GUEST_STAGES.findIndex((s) => s.key === status);
+  if (status === "paid") return GUEST_STAGES.length - 1;
+  if (status === "cancelled") return -1;
+  return GUEST_STAGES.findIndex((s) => s.key === status);
+}
+
+/** An order the counter still has to do something about. */
+export function isOpen(order: Order): boolean {
+  return order.status !== "paid" && order.status !== "cancelled";
 }
 
 export function elapsed(from: number, now: number) {

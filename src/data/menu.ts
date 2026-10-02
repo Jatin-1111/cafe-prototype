@@ -8,6 +8,8 @@
  * review; nothing else in the app needs to change.
  */
 
+import type { ShotKey } from "@/data/media";
+
 export type MenuTag = "bestseller" | "new" | "seasonal" | "contains-nuts" | "spicy";
 
 export type MenuItem = {
@@ -22,9 +24,21 @@ export type MenuItem = {
   note?: string;
   /** Options a guest can pick at the table. Prototype keeps these free. */
   options?: { label: string; choices: string[] }[];
+  /** Minutes at the pass. Falls back to the category default when unset. */
+  prepMinutes?: number;
+  /** A shot in the photography manifest, shown on the ordering screen. */
+  photo?: ShotKey;
 };
 
 export type CategoryId = "coffee" | "small" | "mains" | "sweet";
+
+/** Rough minutes at the pass, used for the guest's ETA. Deliberately honest rather than optimistic. */
+export const CATEGORY_PREP_MINUTES: Record<CategoryId, number> = {
+  coffee: 4,
+  small: 9,
+  mains: 15,
+  sweet: 5,
+};
 
 export const categories: { id: CategoryId; name: string; blurb: string }[] = [
   {
@@ -53,6 +67,7 @@ export const menu: MenuItem[] = [
   // ---------- Coffee & Cold ----------
   {
     id: "m-cappuccino",
+    prepMinutes: 3,
     name: "Cappuccino",
     description: "Double shot, steamed thick, dusted with cocoa",
     price: 169,
@@ -63,6 +78,7 @@ export const menu: MenuItem[] = [
   },
   {
     id: "m-latte",
+    prepMinutes: 3,
     name: "Café Latte",
     description: "Long and milky, the quiet one",
     price: 189,
@@ -75,6 +91,7 @@ export const menu: MenuItem[] = [
   },
   {
     id: "m-cold-coffee",
+    prepMinutes: 5,
     name: "Thick Cold Coffee",
     description: "Blended with ice cream, served tall",
     note: "The one that goes on every table in the room by four in the afternoon.",
@@ -85,6 +102,7 @@ export const menu: MenuItem[] = [
   },
   {
     id: "m-cold-brew",
+    prepMinutes: 2,
     name: "Cold Brew",
     description: "Steeped overnight, poured over ice",
     price: 219,
@@ -122,6 +140,7 @@ export const menu: MenuItem[] = [
   // ---------- Starters ----------
   {
     id: "m-classic-fries",
+    prepMinutes: 7,
     name: "Classic Fries",
     description: "Salted, crisp, serves one to two",
     price: 219,
@@ -130,6 +149,7 @@ export const menu: MenuItem[] = [
   },
   {
     id: "m-peri-fries",
+    prepMinutes: 7,
     name: "Peri Peri Fries",
     description: "Tossed hot, serves one to two",
     price: 263,
@@ -173,6 +193,8 @@ export const menu: MenuItem[] = [
   },
   {
     id: "m-sliders",
+    prepMinutes: 14,
+    photo: "sliders",
     name: "Tricolour Sliders",
     description: "Three mini burgers, wedges, dip",
     note: "Saffron, white and green buns, which is as patriotic as the kitchen gets.",
@@ -202,6 +224,7 @@ export const menu: MenuItem[] = [
   // ---------- Pizza & Pasta ----------
   {
     id: "m-margherita",
+    prepMinutes: 12,
     name: "Margherita",
     description: "San Marzano sauce, mozzarella, basil",
     note: "Hand-stretched thin base. Ten minutes, and worth the wait.",
@@ -213,6 +236,8 @@ export const menu: MenuItem[] = [
   },
   {
     id: "m-farmhouse",
+    prepMinutes: 14,
+    photo: "pizza",
     name: "Farmhouse Pizza",
     description: "Onion, capsicum, corn, olives, mushroom",
     price: 429,
@@ -222,6 +247,7 @@ export const menu: MenuItem[] = [
   },
   {
     id: "m-bbq-chicken-pizza",
+    prepMinutes: 16,
     name: "BBQ Chicken Pizza",
     description: "Smoked chicken, red onion, barbecue drizzle",
     price: 489,
@@ -230,6 +256,7 @@ export const menu: MenuItem[] = [
   },
   {
     id: "m-alfredo",
+    prepMinutes: 13,
     name: "Alfredo Pasta",
     description: "Cream, parmesan, cracked pepper",
     price: 399,
@@ -270,6 +297,8 @@ export const menu: MenuItem[] = [
   },
   {
     id: "m-panini",
+    prepMinutes: 11,
+    photo: "panini",
     name: "Grilled Veg Panini",
     description: "Char-grilled vegetables, melted cheese, pressed hot",
     note: "Broccoli, courgette and peppers off the grill, stacked in a pressed roll with a chilli dip.",
@@ -281,6 +310,8 @@ export const menu: MenuItem[] = [
   },
   {
     id: "m-burger",
+    prepMinutes: 13,
+    photo: "burger",
     name: "Crispy Chicken Burger",
     description: "Fried chicken, slaw, cheese, house sauce",
     price: 359,
@@ -293,6 +324,7 @@ export const menu: MenuItem[] = [
   // ---------- Desserts ----------
   {
     id: "m-brownie",
+    prepMinutes: 6,
     name: "Hot Brownie & Ice Cream",
     description: "Warm, dense, vanilla melting over it",
     price: 279,
@@ -302,6 +334,7 @@ export const menu: MenuItem[] = [
   },
   {
     id: "m-tiramisu",
+    prepMinutes: 2,
     name: "Tiramisu",
     description: "Coffee-soaked, mascarpone, cocoa",
     price: 319,
@@ -310,6 +343,7 @@ export const menu: MenuItem[] = [
   },
   {
     id: "m-cheesecake",
+    prepMinutes: 2,
     name: "Blueberry Cheesecake",
     description: "Baked, biscuit base, berry compote",
     price: 329,
@@ -319,6 +353,7 @@ export const menu: MenuItem[] = [
   },
   {
     id: "m-choco-lava",
+    prepMinutes: 7,
     name: "Choco Lava Cake",
     description: "Two pieces, molten centre",
     price: 229,
@@ -332,6 +367,14 @@ export const menuById = new Map(menu.map((item) => [item.id, item]));
 export function itemsIn(category: CategoryId) {
   return menu.filter((item) => item.category === category);
 }
+
+/** Minutes at the pass for one item. */
+export function prepMinutesFor(item: MenuItem): number {
+  return item.prepMinutes ?? CATEGORY_PREP_MINUTES[item.category];
+}
+
+/** The four items the ordering screen leads with — the ones we have photographs of. */
+export const popular = menu.filter((item) => item.photo);
 
 export function formatINR(paise: number) {
   return `₹${paise.toLocaleString("en-IN")}`;

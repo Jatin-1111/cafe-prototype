@@ -40,6 +40,14 @@ type Snapshot = {
 const CART_KEY = "refections.carts.v1";
 const CHANNEL = "refections-sync";
 const POLL_MS = 2500;
+/**
+ * A backgrounded tab still polls, just slowly. The guest's phone is locked in
+ * their pocket exactly when their order becomes ready, so a store that stops
+ * listening while hidden can never tell them. Mobile browsers throttle
+ * background timers hard, so this is a best effort, not a guarantee — real
+ * push would need a service worker.
+ */
+const POLL_HIDDEN_MS = 10000;
 
 const EMPTY: Snapshot = { orders: [], carts: {}, soldOut: [], online: true, loaded: false };
 
@@ -151,10 +159,20 @@ async function send(action: Record<string, unknown>): Promise<{ ok: boolean; ord
   }
 }
 
+let lastHiddenPull = 0;
+
 function startPolling() {
   if (timer !== null || !isBrowser()) return;
   timer = window.setInterval(() => {
-    if (document.visibilityState === "visible") void pull();
+    if (document.visibilityState === "visible") {
+      void pull();
+      return;
+    }
+    const now = Date.now();
+    if (now - lastHiddenPull >= POLL_HIDDEN_MS) {
+      lastHiddenPull = now;
+      void pull();
+    }
   }, POLL_MS);
 }
 
@@ -324,6 +342,16 @@ export async function markPaid(id: string, method: PaymentMethod) {
     billRequested: false,
   }));
   await send({ type: "pay", id, method });
+}
+
+/**
+ * The guest pulling an order back. Not optimistic: the server owns whether the
+ * window is still open, and showing "cancelled" that then springs back would be
+ * worse than a moment's wait.
+ */
+export async function cancelOrder(id: string): Promise<boolean> {
+  const result = await send({ type: "cancel", id });
+  return result.ok;
 }
 
 export async function toggleSoldOut(itemId: string) {

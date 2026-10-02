@@ -8,10 +8,15 @@ import {
   categories,
   formatINR,
   itemsIn,
+  menu,
   menuById,
+  popular,
   type CategoryId,
   type MenuItem,
 } from "@/data/menu";
+import { shots } from "@/data/media";
+import { Photo } from "@/components/Photo";
+import { rememberGuest, recallGuest } from "@/lib/guest";
 import {
   addToCart,
   cartCount,
@@ -35,6 +40,8 @@ export function TableScreen({ table }: { table: string }) {
   const soldOut = useSoldOut();
 
   const [active, setActive] = useState<CategoryId>("coffee");
+  const [query, setQuery] = useState("");
+  const [vegOnly, setVegOnly] = useState(false);
   const [optionFor, setOptionFor] = useState<MenuItem | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [flash, setFlash] = useState<string | null>(null);
@@ -46,9 +53,27 @@ export function TableScreen({ table }: { table: string }) {
   const spotLabel = table === "TA" ? "Takeaway" : `Table ${table}`;
 
   const openOrders = useMemo(
-    () => orders.filter((order) => order.table === table && order.status !== "paid"),
+    () =>
+      orders.filter(
+        (order) =>
+          order.table === table && order.status !== "paid" && order.status !== "cancelled",
+      ),
     [orders, table],
   );
+
+  const search = query.trim().toLowerCase();
+
+  /** Searching looks across the whole menu; otherwise it is the open tab. */
+  const visible = useMemo(() => {
+    const base = search
+      ? menu.filter(
+          (item) =>
+            item.name.toLowerCase().includes(search) ||
+            item.description.toLowerCase().includes(search),
+        )
+      : itemsIn(active);
+    return vegOnly ? base.filter((item) => item.veg) : base;
+  }, [search, active, vegOnly]);
 
   function add(item: MenuItem, options?: Record<string, string>) {
     addToCart(table, item.id, options);
@@ -80,8 +105,41 @@ export function TableScreen({ table }: { table: string }) {
             </p>
           </div>
 
+          <div className="flex items-center gap-2 px-4 pb-3">
+            <div className="relative flex-1">
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search the menu"
+                aria-label="Search the menu"
+                className="w-full h-10 pl-9 pr-3 bg-cream border border-line text-sm placeholder:text-muted focus:border-brand focus:outline-none"
+              />
+              <span
+                aria-hidden
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-sm"
+              >
+                ⌕
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setVegOnly((on) => !on)}
+              aria-pressed={vegOnly}
+              className={`shrink-0 h-10 px-3 text-[11px] font-semibold uppercase tracking-[0.1em] border transition-colors ${
+                vegOnly
+                  ? "border-[#1E7A3C] bg-[#1E7A3C]/10 text-[#1E7A3C]"
+                  : "border-line text-muted hover:border-ink hover:text-ink"
+              }`}
+            >
+              Veg only
+            </button>
+          </div>
+
           <nav
-            className="flex gap-5 px-4 border-b border-line overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className={`flex gap-5 px-4 border-b border-line overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
+              search ? "hidden" : ""
+            }`}
             aria-label="Menu sections"
           >
             {categories.map((category) => (
@@ -126,15 +184,53 @@ export function TableScreen({ table }: { table: string }) {
           </div>
         ) : null}
 
+        {/* ---------- Popular, with the photographs we have ---------- */}
+        {!search && !vegOnly && active === "coffee" ? (
+          <section className="px-4 pt-5" aria-label="Popular right now">
+            <p className="eyebrow">Popular right now</p>
+            <ul className="mt-3 flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {popular.map((item) => {
+                const out = mounted && soldOut.includes(item.id);
+                return (
+                  <li key={item.id} className="w-32 shrink-0">
+                    <button
+                      type="button"
+                      disabled={out}
+                      onClick={() => (item.options ? setOptionFor(item) : add(item))}
+                      className="block w-full text-left rounded-none disabled:opacity-45"
+                    >
+                      <Photo
+                        shot={shots[item.photo!]}
+                        sizes="128px"
+                        aspect="1 / 1"
+                        arch
+                        className="w-full"
+                      />
+                      <span className="mt-2 block text-xs font-semibold leading-snug">
+                        {item.name}
+                      </span>
+                      <span className="tnum mt-0.5 block text-xs text-brand">
+                        {out ? "Sold out" : formatINR(item.price)}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ) : null}
+
         {/* ---------- Items ---------- */}
         <ul className="px-4 flex-1" style={{ paddingBottom: count > 0 ? 96 : 32 }}>
           <li className="pt-5 pb-3">
             <p className="text-xs text-muted">
-              {categories.find((category) => category.id === active)?.blurb}
+              {search
+                ? `${visible.length} ${visible.length === 1 ? "match" : "matches"} for “${query.trim()}”`
+                : categories.find((category) => category.id === active)?.blurb}
             </p>
           </li>
 
-          {itemsIn(active).map((item) => {
+          {visible.map((item) => {
             const out = mounted && soldOut.includes(item.id);
             return (
               <li key={item.id} className="flex gap-3 items-start py-3.5 border-b border-line">
@@ -171,6 +267,22 @@ export function TableScreen({ table }: { table: string }) {
               </li>
             );
           })}
+
+          {visible.length === 0 ? (
+            <li className="py-12 text-center">
+              <p className="text-sm text-ink-2">Nothing matches that.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery("");
+                  setVegOnly(false);
+                }}
+                className="mt-3 text-xs font-semibold uppercase tracking-[0.12em] text-brand underline underline-offset-4"
+              >
+                Clear the filters
+              </button>
+            </li>
+          ) : null}
 
           <li className="py-8 text-center">
             <p className="text-[11px] text-muted leading-relaxed">
@@ -311,8 +423,10 @@ function CheckoutSheet({
 }) {
   const lines = useCart(table);
   const [note, setNote] = useState("");
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+  // Prefilled from the last order on this device, so a second round is one tap.
+  const [remembered] = useState(recallGuest);
+  const [name, setName] = useState(remembered.name ?? "");
+  const [phone, setPhone] = useState(remembered.phone ?? "");
   const [orderType, setOrderType] = useState<OrderType>(table === "TA" ? "takeaway" : "table");
   const [sending, setSending] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -324,12 +438,10 @@ function CheckoutSheet({
   async function send() {
     if (!canSend || sending) return;
     setSending(true);
-    const order = await placeOrder(table, {
-      note,
-      orderType,
-      guest: { name: name.trim(), phone: phone.trim() || undefined },
-    });
+    const guest = { name: name.trim(), phone: phone.trim() || undefined };
+    const order = await placeOrder(table, { note, orderType, guest });
     if (order) {
+      rememberGuest(guest);
       onSent(order.id);
     } else {
       setFailed(true);
@@ -420,6 +532,11 @@ function CheckoutSheet({
           <div>
             <label htmlFor="guest-name" className="eyebrow block mb-2">
               Name to call out
+              {remembered.name ? (
+                <span className="ml-2 normal-case tracking-normal text-muted">
+                  · from last time
+                </span>
+              ) : null}
             </label>
             <input
               id="guest-name"
