@@ -7,6 +7,7 @@ import { Photo } from "@/components/Photo";
 import { StarIcon } from "@/components/Icon";
 import { FauxQR } from "@/components/FauxQR";
 import { ReserveForm } from "@/components/ReserveForm";
+import { Reveal } from "@/components/Motion";
 
 const counterBoard = [
   { name: "Thick Cold Coffee", price: 239 },
@@ -60,8 +61,8 @@ export default function HomePage() {
 
               <div className="mt-8 max-w-[46ch]">
                 <p className="text-lg text-ink-2 leading-relaxed">
-                  {cafe.tagline}. Arched niches, jade velvet and speckled terrazzo, open
-                  every day from {cafe.hours[0].open} to {cafe.hours[0].close}.
+                  {cafe.tagline}. Arched niches, jade velvet and speckled terrazzo, open every day
+                  from {cafe.hours[0].open} to {cafe.hours[0].close}.
                 </p>
               </div>
 
@@ -147,7 +148,7 @@ export default function HomePage() {
       <section id="story" className="scroll-mt-28 bg-paper">
         <div className="mx-auto max-w-6xl px-5 sm:px-8 py-20 sm:py-28">
           <div className="grid gap-14 lg:grid-cols-[0.85fr_1fr] lg:gap-20">
-            <div>
+            <Reveal>
               <p className="eyebrow">The room</p>
               <h2 className="mt-4 font-display text-4xl sm:text-5xl leading-[0.95] tracking-tight">
                 Built around
@@ -173,15 +174,18 @@ export default function HomePage() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </Reveal>
 
-            <div className="space-y-6 text-[17px] leading-relaxed text-ink-2 max-w-[62ch]">
+            <Reveal
+              delay={0.08}
+              className="space-y-6 text-[17px] leading-relaxed text-ink-2 max-w-[62ch]"
+            >
               {cafe.story.body.map((para, index) => (
                 <p key={index} className={index === 0 ? "text-ink text-xl leading-relaxed" : ""}>
                   {para}
                 </p>
               ))}
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -189,12 +193,10 @@ export default function HomePage() {
       {/* ---------------- Signatures ---------------- */}
       <section className="bg-cream border-y border-line">
         <div className="mx-auto max-w-6xl px-5 sm:px-8 py-20 sm:py-24">
-          <div className="flex flex-wrap items-end justify-between gap-4">
+          <Reveal className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="eyebrow">What people come back for</p>
-              <h2 className="mt-3 font-display text-3xl sm:text-4xl leading-tight">
-                Four things
-              </h2>
+              <h2 className="mt-3 font-display text-3xl sm:text-4xl leading-tight">Four things</h2>
             </div>
             <Link
               href="/menu"
@@ -202,25 +204,28 @@ export default function HomePage() {
             >
               Full menu, {menu.length} items
             </Link>
-          </div>
+          </Reveal>
 
           <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {signatures.map((item, index) => (
-              <article key={item.id} className="flex flex-col">
-                <Photo
-                  shot={signatureShots[index]}
-                  sizes="(min-width: 1024px) 22vw, (min-width: 640px) 44vw, 88vw"
-                  arch
-                  className="mb-6"
-                />
-                <h3 className="font-display text-lg leading-tight tracking-tight">
-                  {item.name}
-                </h3>
-                <p className="mt-3 text-sm text-muted leading-relaxed flex-1">
-                  {item.note ?? item.description}
-                </p>
-                <p className="mt-5 tnum font-semibold text-brand">{formatINR(item.price)}</p>
-              </article>
+              /* A sixteenth of a second between cards. Enough that the row
+                 settles left to right instead of landing as a block, not
+                 enough that anyone waits for the fourth one. */
+              <Reveal key={item.id} delay={index * 0.06} className="flex">
+                <article className="flex flex-col flex-1">
+                  <Photo
+                    shot={signatureShots[index]}
+                    sizes="(min-width: 1024px) 22vw, (min-width: 640px) 44vw, 88vw"
+                    arch
+                    className="mb-6"
+                  />
+                  <h3 className="font-display text-lg leading-tight tracking-tight">{item.name}</h3>
+                  <p className="mt-3 text-sm text-muted leading-relaxed flex-1">
+                    {item.note ?? item.description}
+                  </p>
+                  <p className="mt-5 tnum font-semibold text-brand">{formatINR(item.price)}</p>
+                </article>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -230,7 +235,7 @@ export default function HomePage() {
       <section className="bg-ink text-sand">
         <div className="mx-auto max-w-6xl px-5 sm:px-8 py-20 sm:py-24">
           <div className="grid gap-14 lg:grid-cols-[1fr_0.8fr] lg:gap-20 items-center">
-            <div>
+            <Reveal>
               <p className="eyebrow text-brass">Order from your table</p>
               <h2 className="mt-4 font-display text-4xl sm:text-5xl leading-[0.95] tracking-tight">
                 Nobody likes
@@ -258,9 +263,9 @@ export default function HomePage() {
               >
                 Try it on table 07
               </Link>
-            </div>
+            </Reveal>
 
-            <div className="lg:justify-self-end">
+            <Reveal delay={0.08} className="lg:justify-self-end">
               <div className="bg-sand rounded-card p-6 border-[6px] border-brass w-fit mx-auto">
                 <FauxQR seed="refections-table-07" className="w-44 h-44 text-ink" />
                 <p className="mt-4 text-center eyebrow text-ink">Table 07</p>
@@ -268,7 +273,7 @@ export default function HomePage() {
               <p className="mt-4 text-center text-xs text-sand/45 max-w-[26ch] mx-auto">
                 Decorative in the prototype. The demo link opens the same screen.
               </p>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -277,7 +282,7 @@ export default function HomePage() {
       <section id="visit" className="scroll-mt-28 plaster bg-sand border-b border-line">
         <div className="mx-auto max-w-6xl px-5 sm:px-8 py-20 sm:py-24">
           <div className="grid gap-14 lg:grid-cols-2 lg:gap-20">
-            <div>
+            <Reveal>
               <p className="eyebrow">Visit</p>
               <h2 className="mt-4 font-display text-4xl sm:text-5xl leading-[1.02]">Sector 35C</h2>
               <address className="mt-6 not-italic text-lg text-ink-2 leading-relaxed">
@@ -328,15 +333,11 @@ export default function HomePage() {
               <p className="mt-4 text-sm text-muted">
                 The kitchen closes forty-five minutes before the room does.
               </p>
-            </div>
+            </Reveal>
 
-            <div className="lg:pt-10">
-              <Photo
-                shot={shots.arch}
-                sizes="(min-width: 1024px) 46vw, 92vw"
-                arch
-              />
-            </div>
+            <Reveal delay={0.08} className="lg:pt-10">
+              <Photo shot={shots.arch} sizes="(min-width: 1024px) 46vw, 92vw" arch />
+            </Reveal>
           </div>
         </div>
       </section>
@@ -345,7 +346,7 @@ export default function HomePage() {
       <section id="reserve" className="scroll-mt-28 bg-paper">
         <div className="mx-auto max-w-6xl px-5 sm:px-8 py-20 sm:py-28">
           <div className="grid gap-12 lg:grid-cols-[0.7fr_1fr] lg:gap-20">
-            <div>
+            <Reveal>
               <p className="eyebrow">Reserve</p>
               <h2 className="mt-4 font-display text-4xl leading-[1.08]">
                 Hold me
@@ -353,15 +354,16 @@ export default function HomePage() {
                 <span className="italic text-brand">a table</span>
               </h2>
               <p className="mt-6 text-ink-2 leading-relaxed max-w-[38ch]">
-                We hold a few tables back for walk-ins, always. The rest can be booked from here,
-                up to two weeks ahead.
+                We hold a few tables back for walk-ins, always. The rest can be booked from here, up
+                to two weeks ahead.
               </p>
-            </div>
-            <ReserveForm />
+            </Reveal>
+            <Reveal delay={0.08}>
+              <ReserveForm />
+            </Reveal>
           </div>
         </div>
       </section>
-
     </>
   );
 }

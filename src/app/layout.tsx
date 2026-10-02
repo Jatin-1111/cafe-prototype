@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Jost, Marcellus } from "next/font/google";
 import "./globals.css";
 import { cafe } from "@/data/cafe";
+import { MotionProvider } from "@/components/Motion";
 
 // Echoes the thin, wide-tracked letters backlit on the counter wall.
 const marcellus = Marcellus({
@@ -37,7 +38,20 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       data-scroll-behavior="smooth"
       className={`${marcellus.variable} ${jost.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-paper text-ink">{children}</body>
+      <head>
+        {/*
+          Scroll reveals start at opacity 0 and are brought up by JavaScript.
+          With scripts off that would leave a reader looking at blank sections.
+          A <noscript> rule is parsed only in that case, so nobody else pays a
+          flash for it.
+        */}
+        <noscript>
+          <style>{"[data-reveal]{opacity:1!important;transform:none!important}"}</style>
+        </noscript>
+      </head>
+      <body className="min-h-full flex flex-col bg-paper text-ink">
+        <MotionProvider>{children}</MotionProvider>
+      </body>
     </html>
   );
 }

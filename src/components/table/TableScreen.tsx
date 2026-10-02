@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { cafe } from "@/data/cafe";
 import {
@@ -34,6 +35,7 @@ import { useCart, useMounted, useOrders, useSoldOut } from "@/lib/useStore";
 import { VegMark } from "@/components/VegMark";
 import { ArcadeRule } from "@/components/ArcadeRule";
 import { Sheet } from "@/components/table/Sheet";
+import { dockedBar } from "@/lib/motion";
 
 export function TableScreen({ table }: { table: string }) {
   const router = useRouter();
@@ -58,8 +60,7 @@ export function TableScreen({ table }: { table: string }) {
   const openOrders = useMemo(
     () =>
       orders.filter(
-        (order) =>
-          order.table === table && order.status !== "paid" && order.status !== "cancelled",
+        (order) => order.table === table && order.status !== "paid" && order.status !== "cancelled",
       ),
     [orders, table],
   );
@@ -103,9 +104,7 @@ export function TableScreen({ table }: { table: string }) {
             <p className="text-xs uppercase tracking-[0.18em] text-muted">
               Est. {cafe.established} · {cafe.city}
             </p>
-            <p className="wordmark text-lg mt-2 leading-none">
-              {cafe.name.toUpperCase()}
-            </p>
+            <p className="wordmark text-lg mt-2 leading-none">{cafe.name.toUpperCase()}</p>
           </div>
 
           <div className="flex items-center gap-2 px-4 pb-3">
@@ -258,9 +257,7 @@ export function TableScreen({ table }: { table: string }) {
                 <div className={`min-w-0 flex-1 ${out ? "opacity-45" : ""}`}>
                   <div className="flex items-center gap-2">
                     <VegMark veg={item.veg} />
-                    <h3 className="font-semibold text-[15px] leading-snug truncate">
-                      {item.name}
-                    </h3>
+                    <h3 className="font-semibold text-[15px] leading-snug truncate">{item.name}</h3>
                   </div>
                   <p className="mt-1 text-xs text-muted leading-relaxed">{item.description}</p>
                   <p className="mt-1.5 tnum text-sm font-semibold text-brand">
@@ -315,49 +312,62 @@ export function TableScreen({ table }: { table: string }) {
         </ul>
 
         {/* ---------- Cart bar ---------- */}
-        {mounted && count > 0 ? (
-          <div className="sticky bottom-0 z-30 px-3 pb-3 pt-2 bg-gradient-to-t from-paper via-paper to-transparent">
-            <button
-              type="button"
-              onClick={() => setCartOpen(true)}
-              className="w-full flex items-center justify-between gap-4 bg-wine text-cream px-4 h-14 font-semibold hover:bg-ink transition-colors"
+        {/* Slides up from the bottom edge on the first item and back down on
+            the last, so the list below it never jumps by the bar's height
+            without warning. */}
+        <AnimatePresence>
+          {mounted && count > 0 ? (
+            <motion.div
+              {...dockedBar}
+              className="sticky bottom-0 z-30 px-3 pb-3 pt-2 bg-gradient-to-t from-paper via-paper to-transparent"
             >
-              <span className="tnum text-sm">
-                {count} {count === 1 ? "item" : "items"} · {formatINR(total)}
-              </span>
-              <span className="text-xs uppercase tracking-[0.16em] font-bold">
-                Review order
-              </span>
-            </button>
-          </div>
-        ) : null}
+              <button
+                type="button"
+                onClick={() => setCartOpen(true)}
+                className="w-full flex items-center justify-between gap-4 bg-wine text-cream px-4 h-14 font-semibold hover:bg-ink transition-colors"
+              >
+                <span className="tnum text-sm">
+                  {count} {count === 1 ? "item" : "items"} · {formatINR(total)}
+                </span>
+                <span className="text-xs uppercase tracking-[0.16em] font-bold">Review order</span>
+              </button>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
       </div>
 
-      {optionFor ? (
-        <OptionSheet
-          // Keyed so the sheet remounts per item: otherwise the previous
-          // item's choices survive into the new one.
-          key={optionFor.id}
-          item={optionFor}
-          onClose={() => setOptionFor(null)}
-          onAdd={(options) => {
-            add(optionFor, options);
-            setOptionFor(null);
-          }}
-        />
-      ) : null}
+      {/* AnimatePresence keeps the sheet mounted long enough to animate out.
+          Without it a sheet rises on open and vanishes on close, which reads
+          as a glitch rather than a dismissal. */}
+      <AnimatePresence>
+        {optionFor ? (
+          <OptionSheet
+            // Keyed so the sheet remounts per item: otherwise the previous
+            // item's choices survive into the new one.
+            key={optionFor.id}
+            item={optionFor}
+            onClose={() => setOptionFor(null)}
+            onAdd={(options) => {
+              add(optionFor, options);
+              setOptionFor(null);
+            }}
+          />
+        ) : null}
+      </AnimatePresence>
 
-      {cartOpen ? (
-        <CheckoutSheet
-          table={table}
-          spotLabel={spotLabel}
-          onClose={() => setCartOpen(false)}
-          onSent={(orderId) => {
-            setCartOpen(false);
-            router.push(`/t/${table}/order/${orderId}`);
-          }}
-        />
-      ) : null}
+      <AnimatePresence>
+        {cartOpen ? (
+          <CheckoutSheet
+            table={table}
+            spotLabel={spotLabel}
+            onClose={() => setCartOpen(false)}
+            onSent={(orderId) => {
+              setCartOpen(false);
+              router.push(`/t/${table}/order/${orderId}`);
+            }}
+          />
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }
@@ -393,7 +403,12 @@ function OptionSheet({
                   <button
                     key={choice.name}
                     type="button"
-                    onClick={() => setPicked((prev) => ({ ...prev, [group.label]: choice.name }))}
+                    onClick={() =>
+                      setPicked((prev) => ({
+                        ...prev,
+                        [group.label]: choice.name,
+                      }))
+                    }
                     className={`flex items-center gap-3 h-12 px-3 border text-sm text-left transition-colors ${
                       on
                         ? "border-brand bg-brand/5 text-ink font-semibold"
@@ -458,7 +473,8 @@ function CheckoutSheet({
 
   const total = cartTotal(lines);
   const needsPhone = orderType === "takeaway";
-  const canSend = lines.length > 0 && name.trim().length > 0 && (!needsPhone || phone.trim().length >= 6);
+  const canSend =
+    lines.length > 0 && name.trim().length > 0 && (!needsPhone || phone.trim().length >= 6);
 
   async function send() {
     if (!canSend || sending) return;
@@ -501,7 +517,10 @@ function CheckoutSheet({
                   <p className="mt-1 tnum text-xs text-muted">
                     {formatINR(line.price)} each
                     {line.base && line.price > line.base ? (
-                      <span className="text-brand"> · includes {formatINR(line.price - line.base)} extras</span>
+                      <span className="text-brand">
+                        {" "}
+                        · includes {formatINR(line.price - line.base)} extras
+                      </span>
                     ) : null}
                   </p>
                   <input
@@ -520,7 +539,7 @@ function CheckoutSheet({
                     className="w-9 h-9 grid place-items-center text-ink hover:bg-sand transition-colors"
                     aria-label={`One less ${line.name}`}
                   >
-                  <MinusIcon className="w-3.5 h-3.5" />
+                    <MinusIcon className="w-3.5 h-3.5" />
                   </button>
                   <span className="w-8 text-center tnum text-sm font-bold">{line.qty}</span>
                   <button
@@ -529,7 +548,7 @@ function CheckoutSheet({
                     className="w-9 h-9 grid place-items-center text-ink hover:bg-sand transition-colors"
                     aria-label={`One more ${line.name}`}
                   >
-                  <PlusIcon className="w-3.5 h-3.5" />
+                    <PlusIcon className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </li>

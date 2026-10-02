@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { cafe } from "@/data/cafe";
 import { formatINR } from "@/data/menu";
 import {
@@ -27,6 +28,7 @@ import { ArcadeRule } from "@/components/ArcadeRule";
 import { FauxQR } from "@/components/FauxQR";
 import { Sheet } from "@/components/table/Sheet";
 import { MinusIcon, PlusIcon } from "@/components/Icon";
+import { swap, transition, EASE, DURATION } from "@/lib/motion";
 
 /**
  * Buzzes and marks the tab the moment an order is ready. A guest's phone is
@@ -104,14 +106,13 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
   }
 
   if (!order) {
-
     return (
       <Shell table={table}>
         <div className="px-4 py-16 text-center">
           <p className="font-display text-2xl tracking-tight">ORDER NOT FOUND</p>
           <p className="mt-3 text-sm text-muted max-w-[34ch] mx-auto leading-relaxed">
-            This prototype keeps orders in the browser, so a fresh browser will not have it.
-            Place a new one and it will show up here.
+            This prototype keeps orders in the browser, so a fresh browser will not have it. Place a
+            new one and it will show up here.
           </p>
           <Link
             href={`/t/${table}`}
@@ -175,20 +176,36 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
           Order {order.code}
           {order.orderType === "takeaway" ? " · Takeaway" : ""}
         </p>
-        <h1 className="mt-3 font-display text-3xl leading-none tracking-tight text-brand">
-          {current.label.toUpperCase()}
-        </h1>
-        <p className="mt-3 text-sm text-ink-2 max-w-[36ch] mx-auto leading-relaxed">
-          {current.copy}
-        </p>
-        {eta ? (
-          <p className="mt-5 inline-flex items-center gap-2 rounded-[6px] border border-brand/35 bg-brand/5 px-4 py-1.5">
-            <span className="text-sm font-semibold text-brand">{eta}</span>
-            {order.readyBy ? (
-              <span className="tnum text-xs text-muted">· by {clockTime(order.readyBy)}</span>
-            ) : null}
-          </p>
-        ) : null}
+        {/* This heading is the entire point of the screen, and it changes while
+            the phone is face down on the table. Swapping it with a crossfade
+            means a guest who glances back sees that something moved, instead of
+            wondering whether it always said that. */}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div key={order.status} {...swap}>
+            <h1 className="mt-3 font-display text-3xl leading-none tracking-tight text-brand">
+              {current.label.toUpperCase()}
+            </h1>
+            <p className="mt-3 text-sm text-ink-2 max-w-[36ch] mx-auto leading-relaxed">
+              {current.copy}
+            </p>
+          </motion.div>
+        </AnimatePresence>
+        <AnimatePresence>
+          {eta ? (
+            <motion.p
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={transition}
+              className="mt-5 inline-flex items-center gap-2 rounded-[6px] border border-brand/35 bg-brand/5 px-4 py-1.5"
+            >
+              <span className="text-sm font-semibold text-brand">{eta}</span>
+              {order.readyBy ? (
+                <span className="tnum text-xs text-muted">· by {clockTime(order.readyBy)}</span>
+              ) : null}
+            </motion.p>
+          ) : null}
+        </AnimatePresence>
 
         <p className="mt-4 tnum text-xs uppercase tracking-[0.14em] text-muted">
           Placed {clockTime(order.placedAt)}
@@ -201,18 +218,29 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
         {stages.map((step, index) => {
           const done = index <= stage;
           return (
-            <li
+            <motion.li
               key={step.key}
-              className={`px-2 py-3 text-center ${
-                done ? "bg-brand text-cream" : "bg-paper text-muted"
-              }`}
+              /* The colour is animated rather than swapped so the step you are
+                 on fills in, which is a smaller signal than the heading but
+                 points at the same change. */
+              initial={false}
+              animate={{
+                backgroundColor: done ? "var(--color-brand)" : "var(--color-paper)",
+                color: done ? "var(--color-cream)" : "var(--color-muted)",
+              }}
+              transition={{
+                duration: DURATION.slow,
+                ease: EASE,
+                delay: done ? index * 0.05 : 0,
+              }}
+              className="px-2 py-3 text-center"
               aria-current={index === stage ? "step" : undefined}
             >
               <span className="block tnum text-[11px] font-bold opacity-70">0{index + 1}</span>
               <span className="block mt-1 text-[11px] uppercase tracking-[0.1em] font-bold">
                 {step.label}
               </span>
-            </li>
+            </motion.li>
           );
         })}
       </ol>
@@ -274,8 +302,8 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
           <div className="rounded-card border border-brand/40 bg-brand/5 px-4 py-5 text-center">
             <p className="eyebrow text-brand">Waiting for the counter</p>
             <p className="mt-2 text-sm text-ink-2 leading-relaxed max-w-[34ch] mx-auto">
-              You said you have sent {formatINR(order.total)}. The counter confirms it against
-              their own notification, then this closes.
+              You said you have sent {formatINR(order.total)}. The counter confirms it against their
+              own notification, then this closes.
             </p>
           </div>
         ) : settled ? (
@@ -338,9 +366,7 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
           </div>
         ) : null}
 
-        {cancelNote ? (
-          <p className="mt-4 text-xs text-center text-wine">{cancelNote}</p>
-        ) : null}
+        {cancelNote ? <p className="mt-4 text-xs text-center text-wine">{cancelNote}</p> : null}
 
         <Link
           href={`/t/${table}`}
@@ -353,16 +379,18 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
         </p>
       </div>
 
-      {payOpen ? (
-        <PaySheet
-          order={order}
-          onClose={() => setPayOpen(false)}
-          onPaid={() => {
-            void claimPayment(order.id, "upi");
-            setPayOpen(false);
-          }}
-        />
-      ) : null}
+      <AnimatePresence>
+        {payOpen ? (
+          <PaySheet
+            order={order}
+            onClose={() => setPayOpen(false)}
+            onPaid={() => {
+              void claimPayment(order.id, "upi");
+              setPayOpen(false);
+            }}
+          />
+        ) : null}
+      </AnimatePresence>
     </Shell>
   );
 }
@@ -417,8 +445,8 @@ function PaySheet({
         <p className="mt-4 eyebrow">{cafe.fullName}</p>
         <p className="mt-1 tnum font-display text-3xl">{formatINR(order.total)}</p>
         <p className="mt-4 text-xs text-muted max-w-[32ch] mx-auto leading-relaxed">
-          Scan with any UPI app. In this prototype nothing is charged. The button below just
-          marks the order settled.
+          Scan with any UPI app. In this prototype nothing is charged. The button below just marks
+          the order settled.
         </p>
       </div>
 

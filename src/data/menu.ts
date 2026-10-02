@@ -23,7 +23,7 @@ export type MenuItem = {
   /** Longer note shown on the public menu only: the table screen stays terse. */
   note?: string;
   /**
-   * Options a guest picks at the table. A choice may carry a price delta ,
+   * Options a guest picks at the table. A choice may carry a price delta:
    * oat milk and a cheese-burst base are not free anywhere, and a model that
    * assumes they are cannot be shown to an owner.
    */

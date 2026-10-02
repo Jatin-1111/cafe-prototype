@@ -15,8 +15,8 @@ const tones: Record<NonNullable<Props["tone"]>, string> = {
 
 /**
  * A band of arches, lifted from the niche wall behind the counter.
- * Marks a real boundary , the top of a page, the end of a section ,
- * and is never used as decoration between paragraphs.
+ * Marks a real boundary: the top of a page, the end of a section. It is
+ * never used as decoration between paragraphs.
  */
 export function ArcadeRule({ size = 22, tone = "brand", className = "" }: Props) {
   return (

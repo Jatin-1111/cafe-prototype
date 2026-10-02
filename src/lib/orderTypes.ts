@@ -121,7 +121,7 @@ export type Order = {
   /** Added for takeaway packing, applied once per order. */
   packing?: number;
   /**
-   * The guest said they have paid by UPI. The counter still confirms it ,
+   * The guest said they have paid by UPI. The counter still confirms it:
    * there is no gateway here, and a tap that closes a bill on its own is a
    * hole a cafe would notice on day one.
    */

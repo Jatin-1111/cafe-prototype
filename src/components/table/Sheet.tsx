@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useId, useRef } from "react";
+import { motion } from "motion/react";
 import { CloseIcon } from "@/components/Icon";
+import { panel, scrim } from "@/lib/motion";
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -11,7 +13,7 @@ const FOCUSABLE =
  *
  * A real dialog: it takes focus on open, keeps Tab inside itself, closes on
  * Escape, and hands focus back to whatever opened it. Without that, a keyboard
- * or screen-reader user who opens the options sheet is stranded behind it ,
+ * or screen-reader user who opens the options sheet is stranded behind it:
  * the page underneath is still there, still tabbable, and silent.
  */
 export function Sheet({
@@ -25,13 +27,13 @@ export function Sheet({
   onClose: () => void;
   children: React.ReactNode;
 }) {
-  const panel = useRef<HTMLDivElement>(null);
+  const sheet = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const subtitleId = useId();
 
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
-    const node = panel.current;
+    const node = sheet.current;
     node?.querySelector<HTMLElement>(FOCUSABLE)?.focus();
 
     function onKeyDown(event: KeyboardEvent) {
@@ -76,15 +78,20 @@ export function Sheet({
     <div className="fixed inset-0 z-50 flex items-end justify-center">
       {/* rounded-none matters: this is a full-bleed button, and the global
           control radius would otherwise round the scrim into an ellipse. */}
-      <button
+      <motion.button
         type="button"
         aria-label="Close"
         tabIndex={-1}
         onClick={onClose}
         className="absolute inset-0 rounded-none bg-ink/45 backdrop-blur-[2px]"
+        {...scrim}
       />
-      <div
-        ref={panel}
+      {/* Rises off the bottom edge, because that is the edge it is pinned to.
+          A sheet that fades in from nowhere leaves you working out where it
+          came from and, when it closes, where it went. */}
+      <motion.div
+        ref={sheet}
+        {...panel}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -112,7 +119,7 @@ export function Sheet({
           </button>
         </div>
         {children}
-      </div>
+      </motion.div>
     </div>
   );
 }

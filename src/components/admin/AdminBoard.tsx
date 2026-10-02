@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { cafe } from "@/data/cafe";
 import { categories, formatINR, itemsIn, menu } from "@/data/menu";
 import {
@@ -38,6 +39,7 @@ import {
 } from "@/lib/counterAlert";
 import { printKot } from "@/lib/printKot";
 import { ChevronDownIcon, MinusIcon, PlusIcon } from "@/components/Icon";
+import { DURATION, EASE, notice as noticeMotion, transition } from "@/lib/motion";
 
 /** Lanes the counter works, left to right. `paid` is closed out below the board. */
 const LANES: OrderStatus[] = ["new", "preparing", "ready", "served"];
@@ -119,7 +121,7 @@ export function AdminBoard() {
   const sound = useSyncExternalStore(subscribeSound, soundEnabled, soundEnabledOnServer);
   const [notice, setNotice] = useState<string | null>(null);
   /**
-   * Advancing moves a ticket to another lane, which unmounts and remounts it ,
+   * Advancing moves a ticket to another lane, which unmounts and remounts it,
    * so the offer to undo has to live here, above the lanes, or it vanishes the
    * instant it becomes useful.
    */
@@ -262,14 +264,21 @@ export function AdminBoard() {
           </div>
         </div>
 
-        {notice ? (
-          <p
-            role="status"
-            className="border-t border-status-new/40 bg-status-new/10 px-4 sm:px-6 py-2 text-xs font-semibold text-status-new"
-          >
-            {notice}
-          </p>
-        ) : null}
+        {/* A refusal from the server pushes the board down by a row. Growing the
+            strip rather than inserting it keeps the lanes from jumping under a
+            cursor that is already on its way to a button. */}
+        <AnimatePresence>
+          {notice ? (
+            <motion.div {...noticeMotion} className="overflow-hidden">
+              <p
+                role="status"
+                className="border-t border-status-new/40 bg-status-new/10 px-4 sm:px-6 py-2 text-xs font-semibold text-status-new"
+              >
+                {notice}
+              </p>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
 
         {menuOpen ? <Availability soldOut={soldOut} onClose={() => setMenuOpen(false)} /> : null}
       </header>
@@ -346,51 +355,59 @@ export function AdminBoard() {
                 />
               </button>
 
-              {closedOpen ? (
-                <ul className="mt-4 rounded-card border border-line divide-y divide-line-soft overflow-hidden">
-                  {closed.length === 0 ? (
-                    <li className="px-3 py-6 text-center text-xs text-muted">
-                      Nothing settled yet
-                    </li>
-                  ) : (
-                    closed.map((order) => (
-                      <li
-                        key={order.id}
-                        className="px-3 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm"
-                      >
-                        <span className="tnum font-bold">{order.code}</span>
-                        <span className="text-xs text-muted">
-                          {order.orderType === "takeaway" ? "Takeaway" : `Table ${order.table}`}
-                          {order.guest?.name ? ` · ${order.guest.name}` : ""}
-                        </span>
-                        <span className="ml-auto text-xs text-muted">
-                          {order.status === "cancelled"
-                            ? order.cancelledBy === "counter"
-                              ? "Voided"
-                              : "Cancelled"
-                            : order.status === "refunded"
-                              ? "Refunded"
-                              : order.paymentMethod
-                                ? PAYMENT_LABEL[order.paymentMethod]
-                                : "·"}
-                        </span>
-                        <span className="tnum text-xs text-muted w-16 text-right">
-                          {order.paidAt ? clockTime(order.paidAt) : "·"}
-                        </span>
-                        <span
-                          className={`tnum font-semibold w-20 text-right ${
-                            order.status === "cancelled" || order.status === "refunded"
-                              ? "text-muted line-through"
-                              : ""
-                          }`}
-                        >
-                          {formatINR(order.total)}
-                        </span>
+              <AnimatePresence initial={false}>
+                {closedOpen ? (
+                  <motion.ul
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: DURATION.base, ease: EASE }}
+                    className="mt-4 rounded-card border border-line divide-y divide-line-soft overflow-hidden"
+                  >
+                    {closed.length === 0 ? (
+                      <li className="px-3 py-6 text-center text-xs text-muted">
+                        Nothing settled yet
                       </li>
-                    ))
-                  )}
-                </ul>
-              ) : null}
+                    ) : (
+                      closed.map((order) => (
+                        <li
+                          key={order.id}
+                          className="px-3 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm"
+                        >
+                          <span className="tnum font-bold">{order.code}</span>
+                          <span className="text-xs text-muted">
+                            {order.orderType === "takeaway" ? "Takeaway" : `Table ${order.table}`}
+                            {order.guest?.name ? ` · ${order.guest.name}` : ""}
+                          </span>
+                          <span className="ml-auto text-xs text-muted">
+                            {order.status === "cancelled"
+                              ? order.cancelledBy === "counter"
+                                ? "Voided"
+                                : "Cancelled"
+                              : order.status === "refunded"
+                                ? "Refunded"
+                                : order.paymentMethod
+                                  ? PAYMENT_LABEL[order.paymentMethod]
+                                  : "·"}
+                          </span>
+                          <span className="tnum text-xs text-muted w-16 text-right">
+                            {order.paidAt ? clockTime(order.paidAt) : "·"}
+                          </span>
+                          <span
+                            className={`tnum font-semibold w-20 text-right ${
+                              order.status === "cancelled" || order.status === "refunded"
+                                ? "text-muted line-through"
+                                : ""
+                            }`}
+                          >
+                            {formatINR(order.total)}
+                          </span>
+                        </li>
+                      ))
+                    )}
+                  </motion.ul>
+                ) : null}
+              </AnimatePresence>
             </section>
           </>
         )}
@@ -469,7 +486,23 @@ function Ticket({
   const settling = order.status === "served";
 
   return (
-    <article
+    <motion.article
+      /*
+       * layoutId, not layout. Advancing a ticket unmounts it from one lane and
+       * mounts it in the next, so there is no shared element for a plain layout
+       * animation to follow. Matching ids let the card travel to where it
+       * landed, which is the whole question someone at the counter is asking
+       * after they tap: where did that one go?
+       *
+       * layout="position" keeps it to the journey. Animating the box as well
+       * would stretch the text inside it while a ticket changes height between
+       * lanes, and a smeared order number is worse than no animation.
+       */
+      layoutId={order.id}
+      layout="position"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: DURATION.base, ease: EASE }}
       className={`bg-paper rounded-card overflow-hidden border border-line border-l-4 ${
         order.billRequested
           ? "border-l-brand"
@@ -558,7 +591,9 @@ function Ticket({
             ) : (
               <span className="tnum font-bold text-brand w-6 shrink-0">{line.qty}×</span>
             )}
-            <span className={`min-w-0 ${editing && line.qty <= 0 ? "line-through text-muted" : ""}`}>
+            <span
+              className={`min-w-0 ${editing && line.qty <= 0 ? "line-through text-muted" : ""}`}
+            >
               {line.name}
               {line.options ? (
                 <span className="block text-xs text-muted">
@@ -618,9 +653,7 @@ function Ticket({
               </div>
             ) : null}
             <div className="flex items-center justify-between gap-2 mb-2">
-              <span className="eyebrow">
-                {order.paymentClaimedAt ? "Confirm" : "Settle"}
-              </span>
+              <span className="eyebrow">{order.paymentClaimedAt ? "Confirm" : "Settle"}</span>
               <span className="tnum text-sm font-semibold">{formatINR(order.total)}</span>
             </div>
             <div className="grid grid-cols-3 gap-1.5">
@@ -657,18 +690,24 @@ function Ticket({
         {/* Undo, edit, void, print: the things a counter needs when something
             goes wrong, which is most shifts. */}
         <div className="mt-2.5 pt-2 border-t border-line-soft flex flex-wrap items-center gap-x-3 gap-y-1">
-          {undoTo ? (
-            <button
-              type="button"
-              onClick={async () => {
-                await run(setOrderStatus(order.id, undoTo));
-                onUndone();
-              }}
-              className="text-[11px] font-semibold uppercase tracking-[0.08em] text-brand underline underline-offset-2"
-            >
-              Undo
-            </button>
-          ) : null}
+          <AnimatePresence>
+            {undoTo ? (
+              <motion.button
+                type="button"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={transition}
+                onClick={async () => {
+                  await run(setOrderStatus(order.id, undoTo));
+                  onUndone();
+                }}
+                className="text-[11px] font-semibold uppercase tracking-[0.08em] text-brand underline underline-offset-2"
+              >
+                Undo
+              </motion.button>
+            ) : null}
+          </AnimatePresence>
 
           {!isSettled(order.status) ? (
             <button
@@ -732,7 +771,7 @@ function Ticket({
           ) : null}
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }
 

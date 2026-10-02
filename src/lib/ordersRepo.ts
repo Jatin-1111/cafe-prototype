@@ -341,8 +341,8 @@ export async function markPaid(id: string, method: PaymentMethod): Promise<Write
 }
 
 /**
- * The guest pulling an order back. Only from `new`, only inside the window ,
- * both checked here rather than in the browser, since the browser's clock and
+ * The guest pulling an order back. Only from `new`, only inside the window.
+ * Both are checked here rather than in the browser, since the browser's clock and
  * its idea of the status are both things a guest could lean on.
  */
 export async function cancelOrder(id: string): Promise<{ ok: boolean; reason?: string }> {
