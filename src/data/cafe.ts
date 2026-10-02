@@ -32,11 +32,11 @@ export const cafe = {
     ],
   },
 
-  hours: [
-    { days: "Monday — Thursday", open: "11:15 am", close: "10:45 pm" },
-    { days: "Friday — Saturday", open: "11:15 am", close: "11:30 pm" },
-    { days: "Sunday", open: "11:15 am", close: "10:45 pm" },
-  ],
+  /**
+   * The same hours every day, so this is one row rather than three identical
+   * ones. The shape stays an array for the day the weekend opens later.
+   */
+  hours: [{ days: "Every day", open: "11 am", close: "11 pm" }],
 
   notes: [
     "First floor, lift at the back",
