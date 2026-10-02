@@ -562,6 +562,9 @@ function Ticket({
                   {Object.values(line.options).join(" · ")}
                 </span>
               ) : null}
+              {line.note ? (
+                <span className="block text-xs font-semibold text-brand">{line.note}</span>
+              ) : null}
             </span>
           </li>
         ))}
@@ -601,8 +604,20 @@ function Ticket({
       <div className="px-3 py-2.5 border-t border-line-soft">
         {settling ? (
           <>
+            {order.paymentClaimedAt && order.claimedMethod ? (
+              <div className="mb-2 rounded-sm border border-brand/50 bg-brand/5 px-2.5 py-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-brand">
+                  Guest says paid by {PAYMENT_LABEL[order.claimedMethod]}
+                </p>
+                <p className="mt-0.5 text-[11px] text-muted">
+                  Check your notification, then confirm below.
+                </p>
+              </div>
+            ) : null}
             <div className="flex items-center justify-between gap-2 mb-2">
-              <span className="eyebrow">Settle</span>
+              <span className="eyebrow">
+                {order.paymentClaimedAt ? "Confirm" : "Settle"}
+              </span>
               <span className="tnum text-sm font-semibold">{formatINR(order.total)}</span>
             </div>
             <div className="grid grid-cols-3 gap-1.5">

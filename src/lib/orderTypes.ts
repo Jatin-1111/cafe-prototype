@@ -30,6 +30,12 @@ export const STATUS_FLOW: OrderStatus[] = ["new", "preparing", "ready", "served"
 /** Everything the kitchen board advances with one button. */
 export const KITCHEN_FLOW: OrderStatus[] = ["new", "preparing", "ready"];
 
+/**
+ * The lanes an "advance" tap can walk. Stops at `served` deliberately: money is
+ * recorded by settling, never by one more tap.
+ */
+export const SERVICE_FLOW: OrderStatus[] = ["new", "preparing", "ready", "served"];
+
 export const STATUS_LABEL: Record<OrderStatus, string> = {
   new: "New",
   preparing: "Preparing",
@@ -82,9 +88,14 @@ export function guestStagesFor(orderType: OrderType) {
 export type OrderLine = {
   itemId: string;
   name: string;
+  /** Unit price with the chosen options applied. */
   price: number;
+  /** The item's own price, so a receipt can show what the extras added. */
+  base?: number;
   qty: number;
   options?: Record<string, string>;
+  /** A note on this line alone — "no onion in the burger" without touching the pizza. */
+  note?: string;
 };
 
 export type Guest = { name?: string; phone?: string };
@@ -107,6 +118,15 @@ export type Order = {
   paymentMethod?: PaymentMethod;
   /** When the kitchen expects this at the pass. Set once, at placement. */
   readyBy?: number;
+  /** Added for takeaway packing, applied once per order. */
+  packing?: number;
+  /**
+   * The guest said they have paid by UPI. The counter still confirms it —
+   * there is no gateway here, and a tap that closes a bill on its own is a
+   * hole a cafe would notice on day one.
+   */
+  paymentClaimedAt?: number;
+  claimedMethod?: PaymentMethod;
   cancelledAt?: number;
   /** Who pulled it: the guest inside their window, or the counter voiding it. */
   cancelledBy?: "guest" | "counter";
@@ -151,6 +171,20 @@ export function taxBreakdown(total: number) {
 
 export function cartTotal(lines: OrderLine[]) {
   return lines.reduce((sum, l) => sum + l.price * l.qty, 0);
+}
+
+/** What the extras on a whole order came to, for the receipt. */
+export function extrasTotal(lines: OrderLine[]) {
+  return lines.reduce((sum, l) => sum + ((l.price - (l.base ?? l.price)) * l.qty), 0);
+}
+
+/** Splitting a bill evenly, with the stray rupees landing on the first share. */
+export function splitEvenly(total: number, ways: number): number[] {
+  const safe = Math.max(1, Math.min(12, Math.floor(ways)));
+  const each = Math.floor(total / safe);
+  const shares = Array.from({ length: safe }, () => each);
+  shares[0] += total - each * safe;
+  return shares;
 }
 
 export function cartCount(lines: OrderLine[]) {

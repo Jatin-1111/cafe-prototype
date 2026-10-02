@@ -1,4 +1,4 @@
-import { menuById } from "@/data/menu";
+import { menuById, unitPrice } from "@/data/menu";
 import {
   type Guest,
   type Order,
@@ -7,7 +7,7 @@ import {
   type OrderType,
   type PaymentMethod,
   type ServerState,
-  STATUS_FLOW,
+  SERVICE_FLOW,
 } from "@/lib/orderTypes";
 
 /* ============================================================
@@ -238,15 +238,33 @@ export function getServerSnapshot(): Snapshot {
 
 function sameLine(a: OrderLine, b: OrderLine) {
   return (
-    a.itemId === b.itemId && JSON.stringify(a.options ?? {}) === JSON.stringify(b.options ?? {})
+    a.itemId === b.itemId &&
+    JSON.stringify(a.options ?? {}) === JSON.stringify(b.options ?? {}) &&
+    (a.note ?? "") === (b.note ?? "")
   );
+}
+
+/** A note on one line, which is how real substitutions are actually phrased. */
+export function setLineNote(table: string, index: number, note: string) {
+  const current = state.carts[table] ?? [];
+  const next = current.map((l, i) => (i === index ? { ...l, note: note || undefined } : l));
+  const carts = { ...state.carts, [table]: next };
+  writeCarts(carts);
+  setState({ ...state, carts });
 }
 
 export function addToCart(table: string, itemId: string, options?: Record<string, string>) {
   const item = menuById.get(itemId);
   if (!item || state.soldOut.includes(itemId)) return;
 
-  const incoming: OrderLine = { itemId, name: item.name, price: item.price, qty: 1, options };
+  const incoming: OrderLine = {
+    itemId,
+    name: item.name,
+    base: item.price,
+    price: unitPrice(item, options),
+    qty: 1,
+    options,
+  };
   const current = state.carts[table] ?? [];
   const existing = current.find((l) => sameLine(l, incoming));
 
@@ -314,12 +332,9 @@ function optimistic(id: string, change: (order: Order) => Order) {
 export async function advanceOrder(id: string): Promise<Outcome> {
   const from = state.orders.find((order) => order.id === id)?.status;
   optimistic(id, (order) => {
-    const at = STATUS_FLOW.indexOf(order.status);
-    return {
-      ...order,
-      status: STATUS_FLOW[Math.min(at + 1, STATUS_FLOW.length - 1)],
-      updatedAt: Date.now(),
-    };
+    const at = SERVICE_FLOW.indexOf(order.status);
+    if (at === -1 || at === SERVICE_FLOW.length - 1) return order;
+    return { ...order, status: SERVICE_FLOW[at + 1], updatedAt: Date.now() };
   });
   return send({ type: "advance", id, from });
 }
@@ -369,6 +384,17 @@ export async function markPaid(id: string, method: PaymentMethod): Promise<Outco
 export async function cancelOrder(id: string): Promise<boolean> {
   const result = await send({ type: "cancel", id });
   return result.ok;
+}
+
+/** The guest telling the counter they have sent it. The counter still confirms. */
+export async function claimPayment(id: string, method: PaymentMethod): Promise<Outcome> {
+  optimistic(id, (order) => ({
+    ...order,
+    paymentClaimedAt: Date.now(),
+    claimedMethod: method,
+    billRequested: false,
+  }));
+  return send({ type: "claim", id, method });
 }
 
 export async function toggleSoldOut(itemId: string): Promise<Outcome> {

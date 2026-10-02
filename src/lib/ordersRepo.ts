@@ -1,12 +1,13 @@
 import "server-only";
 
 import type { Collection } from "mongodb";
-import { menuById, prepMinutesFor } from "@/data/menu";
+import { menuById, prepMinutesFor, unitPrice } from "@/data/menu";
+import { cafe } from "@/data/cafe";
 import { getDb } from "@/lib/db";
 import { SEED_SOLD_OUT, seedOrders } from "@/lib/seed";
 import {
   CANCEL_WINDOW_MS,
-  STATUS_FLOW,
+  SERVICE_FLOW,
   cartTotal,
   isSettled,
   type Guest,
@@ -96,6 +97,44 @@ async function nextCode(): Promise<string> {
   return `K-${result?.codeSeq ?? Date.now() % 10000}`;
 }
 
+/**
+ * Rebuilds every line from the menu, keeping only what the guest is entitled to
+ * choose: the item, the quantity, the options and a note. Names and prices come
+ * from the server's own copy of the menu, so a crafted request cannot order a
+ * one-rupee pizza.
+ */
+function priceLines(incoming: OrderLine[], soldOut: string[]): OrderLine[] {
+  const lines: OrderLine[] = [];
+
+  for (const line of incoming) {
+    const item = menuById.get(line.itemId);
+    if (!item || soldOut.includes(line.itemId)) continue;
+
+    const qty = Math.max(1, Math.min(50, Math.floor(line.qty)));
+
+    // Drop any option the menu does not actually offer.
+    const chosen: Record<string, string> = {};
+    for (const group of item.options ?? []) {
+      const picked = line.options?.[group.label];
+      if (picked && group.choices.some((choice) => choice.name === picked)) {
+        chosen[group.label] = picked;
+      }
+    }
+
+    lines.push({
+      itemId: item.id,
+      name: item.name,
+      base: item.price,
+      price: unitPrice(item, chosen),
+      qty,
+      options: Object.keys(chosen).length ? chosen : undefined,
+      note: line.note?.trim().slice(0, 140) || undefined,
+    });
+  }
+
+  return lines;
+}
+
 export async function placeOrder(input: {
   table: string;
   lines: OrderLine[];
@@ -105,9 +144,8 @@ export async function placeOrder(input: {
 }): Promise<Order | null> {
   if (!input.lines.length) return null;
 
-  // An item taken off the board while the guest was browsing must not get through.
   const { soldOut } = await getState();
-  const lines = input.lines.filter((line) => !soldOut.includes(line.itemId));
+  const lines = priceLines(input.lines, soldOut);
   if (!lines.length) return null;
 
   const now = Date.now();
@@ -115,14 +153,18 @@ export async function placeOrder(input: {
     (o) => o.status === "new" || o.status === "preparing",
   ).length;
 
+  const orderType = input.orderType ?? "table";
+  const packing = orderType === "takeaway" ? cafe.packingCharge : 0;
+
   const order: Order = {
     id: `o-${now}-${Math.round(Math.random() * 9973)}`,
     code: await nextCode(),
     table: input.table,
-    orderType: input.orderType ?? "table",
+    orderType,
     guest: input.guest?.name || input.guest?.phone ? input.guest : undefined,
     lines,
-    total: cartTotal(lines),
+    total: cartTotal(lines) + packing,
+    packing: packing || undefined,
     status: "new",
     placedAt: now,
     updatedAt: now,
@@ -149,8 +191,14 @@ export async function advanceOrder(id: string, from?: OrderStatus): Promise<Writ
   if (!current) return { ok: false, reason: "That ticket is no longer on the board." };
   if (isSettled(current.status)) return { ok: false, reason: "That ticket is already closed." };
 
-  const at = STATUS_FLOW.indexOf(current.status);
-  const to = STATUS_FLOW[Math.min(at + 1, STATUS_FLOW.length - 1)];
+  // Advancing walks the service lanes only. "paid" is reachable solely through
+  // markPaid, which records how the money arrived — otherwise one extra tap
+  // closes a bill with no payment method against it.
+  const at = SERVICE_FLOW.indexOf(current.status);
+  if (at === -1 || at === SERVICE_FLOW.length - 1) {
+    return { ok: false, reason: "Settle this one with a payment method." };
+  }
+  const to = SERVICE_FLOW[at + 1];
 
   const result = await col.updateOne(
     { _id: id, ...(from ? { status: from } : {}) },
@@ -174,6 +222,28 @@ export async function setOrderStatus(
   if (result.matchedCount === 0) {
     return { ok: false, reason: "Someone else moved this ticket first." };
   }
+  return { ok: true };
+}
+
+/**
+ * The guest saying they have sent the money. It does not close the bill — the
+ * counter confirms against their own UPI notification, which is how a cafe
+ * without a gateway actually works, and keeps "I have paid" from being a
+ * button that settles a tab.
+ */
+export async function claimPayment(id: string, method: PaymentMethod): Promise<WriteResult> {
+  const result = await (await orders()).updateOne(
+    { _id: id, status: { $nin: ["paid", "cancelled", "refunded"] } },
+    {
+      $set: {
+        paymentClaimedAt: Date.now(),
+        claimedMethod: method,
+        billRequested: false,
+        updatedAt: Date.now(),
+      },
+    },
+  );
+  if (result.matchedCount === 0) return { ok: false, reason: "That ticket is already settled." };
   return { ok: true };
 }
 
@@ -221,14 +291,22 @@ export async function updateOrderLines(id: string, lines: OrderLine[]): Promise<
     return { ok: false, reason: "That ticket is already closed." };
   }
 
-  const clean = lines.filter((line) => line.qty > 0);
+  const { soldOut } = await getState();
+  const clean = priceLines(
+    lines.filter((line) => line.qty > 0),
+    // A counter edit may keep an item that has since gone off the board.
+    soldOut.filter((itemId) => !lines.some((line) => line.itemId === itemId)),
+  );
   if (!clean.length) {
     return { ok: false, reason: "An order needs at least one item — void it instead." };
   }
 
+  const existing = await col.findOne({ _id: id }, { projection: { packing: 1 } });
+  const packing = existing?.packing ?? 0;
+
   await col.updateOne(
     { _id: id },
-    { $set: { lines: clean, total: cartTotal(clean), updatedAt: Date.now() } },
+    { $set: { lines: clean, total: cartTotal(clean) + packing, updatedAt: Date.now() } },
   );
   return { ok: true };
 }
@@ -252,6 +330,7 @@ export async function markPaid(id: string, method: PaymentMethod): Promise<Write
         paidAt: now,
         updatedAt: now,
         billRequested: false,
+        paymentClaimedAt: undefined,
       },
     },
   );

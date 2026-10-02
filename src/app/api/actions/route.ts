@@ -5,6 +5,7 @@ import { TABLE_COOKIE, sessionOwnsTable } from "@/lib/tableAuth";
 import {
   advanceOrder,
   cancelOrder,
+  claimPayment,
   getState,
   markPaid,
   placeOrder,
@@ -38,6 +39,7 @@ type Action =
   | { type: "bill"; id: string }
   | { type: "cancel"; id: string }
   | { type: "pay"; id: string; method: PaymentMethod }
+  | { type: "claim"; id: string; method: PaymentMethod }
   | { type: "soldOut"; itemId: string }
   | { type: "reset" };
 
@@ -117,6 +119,8 @@ export async function POST(request: NextRequest) {
         break;
       case "pay":
         return await settle(markPaid(action.id, action.method));
+      case "claim":
+        return await settle(claimPayment(action.id, action.method));
       case "soldOut":
         await toggleSoldOut(action.itemId);
         break;

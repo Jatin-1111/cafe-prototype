@@ -11,12 +11,14 @@ import {
   menu,
   menuById,
   popular,
+  unitPrice,
   type CategoryId,
   type MenuItem,
 } from "@/data/menu";
 import { shots } from "@/data/media";
 import { Photo } from "@/components/Photo";
 import { rememberGuest, recallGuest } from "@/lib/guest";
+import { setLineNote } from "@/lib/orders";
 import {
   addToCart,
   cartCount,
@@ -136,18 +138,32 @@ export function TableScreen({ table }: { table: string }) {
             </button>
           </div>
 
-          <nav
+          <div
+            role="tablist"
             className={`flex gap-5 px-4 border-b border-line overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
               search ? "hidden" : ""
             }`}
             aria-label="Menu sections"
+            onKeyDown={(event) => {
+              const step = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
+              if (!step) return;
+              event.preventDefault();
+              const at = categories.findIndex((c) => c.id === active);
+              const next = categories[(at + step + categories.length) % categories.length];
+              setActive(next.id);
+              document.getElementById(`tab-${next.id}`)?.focus();
+            }}
           >
             {categories.map((category) => (
               <button
                 key={category.id}
+                id={`tab-${category.id}`}
                 type="button"
+                role="tab"
+                aria-selected={active === category.id}
+                aria-controls="menu-items"
+                tabIndex={active === category.id ? 0 : -1}
                 onClick={() => setActive(category.id)}
-                aria-current={active === category.id}
                 className={`shrink-0 rounded-none pb-2.5 text-[11px] uppercase tracking-[0.12em] font-semibold border-b-2 -mb-px transition-colors ${
                   active === category.id
                     ? "text-ink border-brass"
@@ -157,7 +173,7 @@ export function TableScreen({ table }: { table: string }) {
                 {category.name}
               </button>
             ))}
-          </nav>
+          </div>
         </header>
 
         {/* ---------- Orders already running at this table ---------- */}
@@ -221,9 +237,15 @@ export function TableScreen({ table }: { table: string }) {
         ) : null}
 
         {/* ---------- Items ---------- */}
-        <ul className="px-4 flex-1" style={{ paddingBottom: count > 0 ? 96 : 32 }}>
+        <ul
+          id="menu-items"
+          role={search ? undefined : "tabpanel"}
+          aria-labelledby={search ? undefined : `tab-${active}`}
+          className="px-4 flex-1"
+          style={{ paddingBottom: count > 0 ? 96 : 32 }}
+        >
           <li className="pt-5 pb-3">
-            <p className="text-xs text-muted">
+            <p className="text-xs text-muted" role="status" aria-live="polite">
               {search
                 ? `${visible.length} ${visible.length === 1 ? "match" : "matches"} for “${query.trim()}”`
                 : categories.find((category) => category.id === active)?.blurb}
@@ -355,8 +377,9 @@ function OptionSheet({
   onAdd: (options: Record<string, string>) => void;
 }) {
   const [picked, setPicked] = useState<Record<string, string>>(() =>
-    Object.fromEntries((item.options ?? []).map((group) => [group.label, group.choices[0]])),
+    Object.fromEntries((item.options ?? []).map((group) => [group.label, group.choices[0].name])),
   );
+  const total = unitPrice(item, picked);
 
   return (
     <Sheet title={item.name} subtitle={item.description} onClose={onClose}>
@@ -366,12 +389,12 @@ function OptionSheet({
             <legend className="eyebrow mb-3">{group.label}</legend>
             <div className="grid gap-2">
               {group.choices.map((choice) => {
-                const on = picked[group.label] === choice;
+                const on = picked[group.label] === choice.name;
                 return (
                   <button
-                    key={choice}
+                    key={choice.name}
                     type="button"
-                    onClick={() => setPicked((prev) => ({ ...prev, [group.label]: choice }))}
+                    onClick={() => setPicked((prev) => ({ ...prev, [group.label]: choice.name }))}
                     className={`flex items-center gap-3 h-12 px-3 border text-sm text-left transition-colors ${
                       on
                         ? "border-brand bg-brand/5 text-ink font-semibold"
@@ -384,7 +407,10 @@ function OptionSheet({
                         on ? "border-brand bg-brand" : "border-line"
                       }`}
                     />
-                    {choice}
+                    <span className="flex-1">{choice.name}</span>
+                    {choice.price ? (
+                      <span className="tnum text-xs text-muted">+{formatINR(choice.price)}</span>
+                    ) : null}
                   </button>
                 );
               })}
@@ -399,7 +425,7 @@ function OptionSheet({
           onClick={() => onAdd(picked)}
           className="w-full py-4 bg-ink text-sand font-bold uppercase tracking-[0.14em] text-xs hover:bg-brand transition-colors"
         >
-          Add · {formatINR(item.price)}
+          Add · {formatINR(total)}
         </button>
       </div>
     </Sheet>
@@ -473,7 +499,19 @@ function CheckoutSheet({
                         .join(" · ")}
                     </p>
                   ) : null}
-                  <p className="mt-1 tnum text-xs text-muted">{formatINR(line.price)} each</p>
+                  <p className="mt-1 tnum text-xs text-muted">
+                    {formatINR(line.price)} each
+                    {line.base && line.price > line.base ? (
+                      <span className="text-brand"> · includes {formatINR(line.price - line.base)} extras</span>
+                    ) : null}
+                  </p>
+                  <input
+                    value={line.note ?? ""}
+                    onChange={(event) => setLineNote(table, index, event.target.value)}
+                    placeholder="No onion, extra hot…"
+                    aria-label={`Note for ${line.name}`}
+                    className="mt-2 w-full h-8 px-2.5 bg-cream border border-line text-xs placeholder:text-muted/80 focus:border-brand focus:outline-none"
+                  />
                 </div>
 
                 <div className="flex items-center shrink-0 self-start rounded-full border border-line overflow-hidden">

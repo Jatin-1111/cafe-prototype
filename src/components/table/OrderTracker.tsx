@@ -13,13 +13,15 @@ import {
   elapsed,
   guestStage,
   guestStagesFor,
-  markPaid,
+  claimPayment,
+  extrasTotal,
   PAYMENT_LABEL,
+  splitEvenly,
   requestBill,
   taxBreakdown,
   type Order,
 } from "@/lib/orders";
-import { useMounted, useNow, useOrder } from "@/lib/useStore";
+import { useConnection, useMounted, useNow, useOrder } from "@/lib/useStore";
 import type { OrderStatus } from "@/lib/orderTypes";
 import { ArcadeRule } from "@/components/ArcadeRule";
 import { FauxQR } from "@/components/FauxQR";
@@ -57,20 +59,51 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
   const mounted = useMounted();
   const order = useOrder(id);
   const now = useNow();
+  const { loaded } = useConnection();
   const [payOpen, setPayOpen] = useState(false);
   const [cancelNote, setCancelNote] = useState<string | null>(null);
+  const [ways, setWays] = useState(1);
 
   useReadyAlert(order?.status);
 
-  if (!mounted) {
-    return (
-      <Shell table={table}>
-        <p className="px-4 py-16 text-center text-sm text-muted">Fetching your order…</p>
-      </Shell>
-    );
+  if (!mounted || !order) {
+    // Shaped like the real thing, so the page does not lurch when it arrives.
+    // Only call it missing once a read has actually come back empty.
+    const missing = mounted && loaded && !order;
+    if (!missing) {
+      return (
+        <Shell table={table}>
+          <div className="animate-pulse" aria-hidden>
+            <div className="px-4 pt-8 pb-6 text-center border-b border-line">
+              <div className="mx-auto h-3 w-24 rounded-full bg-sand-deep" />
+              <div className="mx-auto mt-4 h-8 w-40 rounded-full bg-sand-deep" />
+              <div className="mx-auto mt-4 h-3 w-56 rounded-full bg-sand" />
+              <div className="mx-auto mt-5 h-8 w-44 rounded-full bg-sand" />
+            </div>
+            <div className="grid grid-cols-4 gap-px bg-line border-b border-line">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="h-14 bg-paper" />
+              ))}
+            </div>
+            <div className="px-4">
+              {[0, 1].map((i) => (
+                <div key={i} className="flex gap-3 py-4 border-b border-line">
+                  <div className="h-3 w-7 rounded-full bg-sand-deep" />
+                  <div className="h-3 flex-1 rounded-full bg-sand" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <p className="sr-only" role="status">
+            Loading your order
+          </p>
+        </Shell>
+      );
+    }
   }
 
   if (!order) {
+
     return (
       <Shell table={table}>
         <div className="px-4 py-16 text-center">
@@ -133,6 +166,10 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
   return (
     <Shell table={table}>
       <div className="px-4 pt-8 pb-6 text-center border-b border-line">
+        {/* The one screen whose whole job is telling you something changed. */}
+        <p className="sr-only" role="status" aria-live="polite">
+          Order {order.code}: {current.label}. {current.copy}
+        </p>
         <p className="eyebrow">
           Order {order.code}
           {order.orderType === "takeaway" ? " · Takeaway" : ""}
@@ -188,14 +225,59 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
         </div>
       ) : null}
 
-      <div className="px-4 py-5 mt-4 bg-cream border-y border-line flex items-baseline justify-between">
-        <span className="eyebrow">Total · GST included</span>
-        <span className="tnum font-display text-2xl">{formatINR(order.total)}</span>
+      <div className="px-4 py-5 mt-4 bg-cream border-y border-line">
+        <div className="flex items-baseline justify-between">
+          <span className="eyebrow">Total · GST included</span>
+          <span className="tnum font-display text-2xl">{formatINR(order.total)}</span>
+        </div>
+        {order.packing ? (
+          <p className="mt-1 tnum text-xs text-muted text-right">
+            includes {formatINR(order.packing)} packing
+          </p>
+        ) : null}
+
+        {settled ? (
+          <div className="mt-4 pt-4 border-t border-line flex items-center justify-between gap-3">
+            <span className="eyebrow">Split</span>
+            <span className="flex items-center gap-3">
+              <span className="flex items-center rounded-full border border-line overflow-hidden">
+                <button
+                  type="button"
+                  aria-label="Fewer people"
+                  onClick={() => setWays((n) => Math.max(1, n - 1))}
+                  className="w-8 h-8 grid place-items-center hover:bg-sand"
+                >
+                  –
+                </button>
+                <span className="tnum w-8 text-center text-sm font-bold">{ways}</span>
+                <button
+                  type="button"
+                  aria-label="More people"
+                  onClick={() => setWays((n) => Math.min(12, n + 1))}
+                  className="w-8 h-8 grid place-items-center hover:bg-sand"
+                >
+                  +
+                </button>
+              </span>
+              <span className="tnum text-sm font-semibold text-brand">
+                {ways === 1 ? "—" : `${formatINR(splitEvenly(order.total, ways)[1])} each`}
+              </span>
+            </span>
+          </div>
+        ) : null}
       </div>
 
       {/* ---------- Settle ---------- */}
       <div className="px-4 py-6">
-        {settled ? (
+        {settled && order.paymentClaimedAt ? (
+          <div className="rounded-card border border-brand/40 bg-brand/5 px-4 py-5 text-center">
+            <p className="eyebrow text-brand">Waiting for the counter</p>
+            <p className="mt-2 text-sm text-ink-2 leading-relaxed max-w-[34ch] mx-auto">
+              You said you have sent {formatINR(order.total)}. The counter confirms it against
+              their own notification, then this closes.
+            </p>
+          </div>
+        ) : settled ? (
           order.billRequested ? (
             <div className="rounded-card border border-brand/40 bg-brand/5 px-4 py-5 text-center">
               <p className="eyebrow text-brand">Bill on its way</p>
@@ -275,7 +357,7 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
           order={order}
           onClose={() => setPayOpen(false)}
           onPaid={() => {
-            markPaid(order.id, "upi");
+            void claimPayment(order.id, "upi");
             setPayOpen(false);
           }}
         />
@@ -301,6 +383,7 @@ function Lines({ order }: { order: Order }) {
                   .join(" · ")}
               </p>
             ) : null}
+            {line.note ? <p className="mt-1 text-xs text-brand">{line.note}</p> : null}
           </div>
           <span className="tnum text-sm text-ink-2">{formatINR(line.price * line.qty)}</span>
         </li>
@@ -348,7 +431,7 @@ function PaySheet({
           disabled={confirming}
           className="w-full py-4 bg-brand text-cream font-bold uppercase tracking-[0.14em] text-xs hover:bg-brand-deep transition-colors disabled:opacity-50"
         >
-          {confirming ? "Confirming…" : "I have paid"}
+          {confirming ? "Telling the counter…" : "I have sent it"}
         </button>
       </div>
     </Sheet>
@@ -377,6 +460,18 @@ function Receipt({ order }: { order: Order }) {
       <Lines order={order} />
 
       <dl className="px-4 py-5 space-y-2 border-b-2 border-dashed border-line text-sm">
+        {extrasTotal(order.lines) > 0 ? (
+          <div className="flex justify-between">
+            <dt className="text-muted">Extras and upgrades</dt>
+            <dd className="tnum text-ink-2">{formatINR(extrasTotal(order.lines))}</dd>
+          </div>
+        ) : null}
+        {order.packing ? (
+          <div className="flex justify-between">
+            <dt className="text-muted">Packing</dt>
+            <dd className="tnum text-ink-2">{formatINR(order.packing)}</dd>
+          </div>
+        ) : null}
         <div className="flex justify-between">
           <dt className="text-muted">Net of tax</dt>
           <dd className="tnum text-ink-2">{formatINR(tax.base)}</dd>

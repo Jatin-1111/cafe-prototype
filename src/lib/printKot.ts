@@ -29,9 +29,10 @@ export function kotHtml(order: Order): string {
       const options = line.options
         ? `<div class="opt">${escapeHtml(Object.values(line.options).join(" · "))}</div>`
         : "";
+      const lineNote = line.note ? `<div class="linenote">${escapeHtml(line.note)}</div>` : "";
       return `<li><span class="qty">${line.qty}</span><span class="name">${escapeHtml(
         line.name,
-      )}${options}</span></li>`;
+      )}${options}${lineNote}</span></li>`;
     })
     .join("");
 
@@ -57,6 +58,7 @@ export function kotHtml(order: Order): string {
   .qty { font-weight: 700; min-width: 22px; }
   .name { font-weight: 700; }
   .opt { font-weight: 400; font-size: 11px; }
+  .linenote { font-weight: 700; font-size: 12px; text-decoration: underline; }
   .note { border: 1px solid #000; padding: 4px 6px; margin: 6px 0 0; font-size: 12px; }
   .guest { margin: 2px 0 0; font-size: 12px; }
   .meta { font-size: 11px; display: flex; justify-content: space-between; }

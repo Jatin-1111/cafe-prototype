@@ -45,6 +45,9 @@ export const cafe = {
     "Wi-Fi on the house, all day",
   ],
 
+  /** Added once to a takeaway order, the way most cafes here charge for boxes. */
+  packingCharge: 20,
+
   tables: 12,
 } as const;
 

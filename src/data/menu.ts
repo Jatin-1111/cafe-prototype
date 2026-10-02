@@ -22,13 +22,25 @@ export type MenuItem = {
   tags?: MenuTag[];
   /** Longer note shown on the public menu only — the table screen stays terse. */
   note?: string;
-  /** Options a guest can pick at the table. Prototype keeps these free. */
-  options?: { label: string; choices: string[] }[];
+  /**
+   * Options a guest picks at the table. A choice may carry a price delta —
+   * oat milk and a cheese-burst base are not free anywhere, and a model that
+   * assumes they are cannot be shown to an owner.
+   */
+  options?: OptionGroup[];
   /** Minutes at the pass. Falls back to the category default when unset. */
   prepMinutes?: number;
   /** A shot in the photography manifest, shown on the ordering screen. */
   photo?: ShotKey;
 };
+
+export type OptionChoice = {
+  name: string;
+  /** Added to the item's price, in rupees. Absent means no change. */
+  price?: number;
+};
+
+export type OptionGroup = { label: string; choices: OptionChoice[] };
 
 export type CategoryId = "coffee" | "small" | "mains" | "sweet";
 
@@ -74,7 +86,7 @@ export const menu: MenuItem[] = [
     category: "coffee",
     veg: true,
     tags: ["bestseller"],
-    options: [{ label: "Milk", choices: ["Full cream", "Skimmed", "Oat"] }],
+    options: [{ label: "Milk", choices: [{ name: "Full cream" }, { name: "Skimmed" }, { name: "Oat", price: 40 }] }],
   },
   {
     id: "m-latte",
@@ -85,8 +97,8 @@ export const menu: MenuItem[] = [
     category: "coffee",
     veg: true,
     options: [
-      { label: "Milk", choices: ["Full cream", "Skimmed", "Oat"] },
-      { label: "Sugar", choices: ["Regular", "Less", "None"] },
+      { label: "Milk", choices: [{ name: "Full cream" }, { name: "Skimmed" }, { name: "Oat", price: 40 }] },
+      { label: "Sugar", choices: [{ name: "Regular" }, { name: "Less" }, { name: "None" }] },
     ],
   },
   {
@@ -108,7 +120,7 @@ export const menu: MenuItem[] = [
     price: 219,
     category: "coffee",
     veg: true,
-    options: [{ label: "Milk", choices: ["Black", "Splash of milk"] }],
+    options: [{ label: "Milk", choices: [{ name: "Black" }, { name: "Splash of milk" }] }],
   },
   {
     id: "m-oreo-shake",
@@ -125,7 +137,7 @@ export const menu: MenuItem[] = [
     price: 119,
     category: "coffee",
     veg: true,
-    options: [{ label: "Strength", choices: ["Regular", "Kadak"] }],
+    options: [{ label: "Strength", choices: [{ name: "Regular" }, { name: "Kadak" }] }],
   },
   {
     id: "m-virgin-mojito",
@@ -134,7 +146,7 @@ export const menu: MenuItem[] = [
     price: 199,
     category: "coffee",
     veg: true,
-    options: [{ label: "Flavour", choices: ["Classic", "Green apple", "Watermelon"] }],
+    options: [{ label: "Flavour", choices: [{ name: "Classic" }, { name: "Green apple" }, { name: "Watermelon" }] }],
   },
 
   // ---------- Starters ----------
@@ -189,7 +201,7 @@ export const menu: MenuItem[] = [
     category: "small",
     veg: true,
     tags: ["spicy"],
-    options: [{ label: "Style", choices: ["Dry", "Gravy"] }],
+    options: [{ label: "Style", choices: [{ name: "Dry" }, { name: "Gravy" }] }],
   },
   {
     id: "m-sliders",
@@ -210,7 +222,7 @@ export const menu: MenuItem[] = [
     price: 329,
     category: "small",
     veg: true,
-    options: [{ label: "Add", choices: ["As is", "Chicken"] }],
+    options: [{ label: "Add", choices: [{ name: "As is" }, { name: "Chicken", price: 90 }] }],
   },
   {
     id: "m-garlic-bread",
@@ -232,7 +244,7 @@ export const menu: MenuItem[] = [
     category: "mains",
     veg: true,
     tags: ["bestseller"],
-    options: [{ label: "Base", choices: ["Thin crust", "Cheese burst"] }],
+    options: [{ label: "Base", choices: [{ name: "Thin crust" }, { name: "Cheese burst", price: 80 }] }],
   },
   {
     id: "m-farmhouse",
@@ -243,7 +255,7 @@ export const menu: MenuItem[] = [
     price: 429,
     category: "mains",
     veg: true,
-    options: [{ label: "Base", choices: ["Thin crust", "Cheese burst"] }],
+    options: [{ label: "Base", choices: [{ name: "Thin crust" }, { name: "Cheese burst", price: 80 }] }],
   },
   {
     id: "m-bbq-chicken-pizza",
@@ -264,8 +276,8 @@ export const menu: MenuItem[] = [
     veg: true,
     tags: ["bestseller"],
     options: [
-      { label: "Pasta", choices: ["Penne", "Fettuccine"] },
-      { label: "Add", choices: ["As is", "Chicken", "Mushroom"] },
+      { label: "Pasta", choices: [{ name: "Penne" }, { name: "Fettuccine" }] },
+      { label: "Add", choices: [{ name: "As is" }, { name: "Chicken", price: 90 }, { name: "Mushroom" }] },
     ],
   },
   {
@@ -284,7 +296,7 @@ export const menu: MenuItem[] = [
     price: 419,
     category: "mains",
     veg: true,
-    options: [{ label: "Add", choices: ["As is", "Chicken"] }],
+    options: [{ label: "Add", choices: [{ name: "As is" }, { name: "Chicken", price: 90 }] }],
   },
   {
     id: "m-hakka-noodles",
@@ -293,7 +305,7 @@ export const menu: MenuItem[] = [
     price: 299,
     category: "mains",
     veg: true,
-    options: [{ label: "Add", choices: ["Veg", "Chicken", "Paneer"] }],
+    options: [{ label: "Add", choices: [{ name: "Veg" }, { name: "Chicken", price: 90 }, { name: "Paneer", price: 70 }] }],
   },
   {
     id: "m-panini",
@@ -306,7 +318,7 @@ export const menu: MenuItem[] = [
     category: "mains",
     veg: true,
     tags: ["bestseller"],
-    options: [{ label: "Filling", choices: ["Grilled veg", "Chicken"] }],
+    options: [{ label: "Filling", choices: [{ name: "Grilled veg" }, { name: "Chicken", price: 90 }] }],
   },
   {
     id: "m-burger",
@@ -318,7 +330,7 @@ export const menu: MenuItem[] = [
     category: "mains",
     veg: false,
     tags: ["bestseller"],
-    options: [{ label: "Side", choices: ["Classic fries", "Peri peri fries"] }],
+    options: [{ label: "Side", choices: [{ name: "Classic fries" }, { name: "Peri peri fries", price: 45 }] }],
   },
 
   // ---------- Desserts ----------
@@ -366,6 +378,20 @@ export const menuById = new Map(menu.map((item) => [item.id, item]));
 
 export function itemsIn(category: CategoryId) {
   return menu.filter((item) => item.category === category);
+}
+
+/** The price of one unit with the chosen options applied. */
+export function unitPrice(item: MenuItem, chosen?: Record<string, string>): number {
+  if (!chosen || !item.options) return item.price;
+  return item.options.reduce((total, group) => {
+    const pick = group.choices.find((choice) => choice.name === chosen[group.label]);
+    return total + (pick?.price ?? 0);
+  }, item.price);
+}
+
+/** Just the extras, for showing a breakdown without re-deriving it. */
+export function optionExtras(item: MenuItem, chosen?: Record<string, string>): number {
+  return unitPrice(item, chosen) - item.price;
 }
 
 /** Minutes at the pass for one item. */

@@ -36,6 +36,8 @@ export function Photo({ shot, className = "", sizes, priority, aspect, arch }: P
           fill
           sizes={sizes ?? "100vw"}
           priority={priority}
+          placeholder={shot.blur ? "blur" : "empty"}
+          blurDataURL={shot.blur}
           className="object-cover"
         />
       </div>
