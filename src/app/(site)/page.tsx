@@ -77,11 +77,24 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              <p className="mt-8 text-sm text-muted">
-                Open today {cafe.hours[0].open} – {cafe.hours[0].close}
-                <span className="mx-2 text-line">|</span>
-                {cafe.notes[0]}
-              </p>
+              <div className="mt-9 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+                {cafe.acclaim.rating ? (
+                  <span className="inline-flex items-center gap-2">
+                    {/* One star, not five: a row of five filled stars beside a
+                        4.3 is the kind of small dishonesty people notice. */}
+                    <span aria-hidden className="text-brand text-base leading-none">
+                      ★
+                    </span>
+                    <span className="tnum font-medium text-ink">{cafe.acclaim.rating}</span>
+                    <span className="text-muted">
+                      from {cafe.acclaim.reviews.toLocaleString("en-IN")}+ reviews
+                    </span>
+                  </span>
+                ) : null}
+                <span className="text-muted">
+                  Open today {cafe.hours[0].open} – {cafe.hours[0].close}
+                </span>
+              </div>
             </div>
 
             {/* Counter price board — the thing hanging behind the till in every old cafe */}

@@ -119,21 +119,23 @@
    ------------------------------------------------------------ */
 
 /**
- * The arcade. A band of arches lifted straight off the niche wall
- * behind the counter. Reserved for real boundaries — top of page,
- * end of a section — never used as filler.
+ * The arcade. A colonnade of tall arches, taken from the niche wall behind the
+ * counter. Pitched taller than it is wide on purpose — at a squat, semicircular
+ * pitch the same idea reads as scalloped bunting, which is a bakery awning, not
+ * the room this cafe actually is.
+ *
+ * Reserved for real boundaries. Never filler between paragraphs.
  */
 .arcade {
   --arch: 26px;
   height: var(--arch);
-  background:
-    radial-gradient(
-        circle at 50% 50%,
-        currentColor 0 calc(var(--arch) * 0.38),
-        transparent calc(var(--arch) * 0.38 + 0.5px)
-      )
-      0 0 / var(--arch) var(--arch) repeat-x,
-    linear-gradient(currentColor, currentColor) 0 100% / 100% 50% no-repeat;
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 20' preserveAspectRatio='none'%3E%3Cpath d='M2 20V7a4 4 0 0 1 8 0v13z' fill='%23000'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 20' preserveAspectRatio='none'%3E%3Cpath d='M2 20V7a4 4 0 0 1 8 0v13z' fill='%23000'/%3E%3C/svg%3E");
+  -webkit-mask-size: calc(var(--arch) * 0.6) 100%;
+  mask-size: calc(var(--arch) * 0.6) 100%;
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
 }
 
 /** An arch-topped frame — the shape every photo and niche in the room takes. */
@@ -203,7 +205,7 @@
 }
 
 .eyebrow {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   font-weight: 500;

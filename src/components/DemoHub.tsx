@@ -105,10 +105,10 @@ export function DemoHub({ scanLinks }: { scanLinks: Record<string, string> }) {
                     }`}
                   >
                     <span className="font-display text-2xl leading-none tnum">{table}</span>
-                    <span className="mt-2 block text-[10px] uppercase tracking-[0.12em] font-bold text-brand min-h-[1.1em]">
+                    <span className="mt-2 block text-[11px] uppercase tracking-[0.1em] font-bold text-brand min-h-[1.1em]">
                       {running ? running.label : ""}
                     </span>
-                    <span className="mt-0.5 block tnum text-[11px] text-muted">
+                    <span className="mt-0.5 block tnum text-xs text-muted">
                       {running ? formatINR(running.total) : "Free"}
                     </span>
                   </Link>
@@ -122,10 +122,10 @@ export function DemoHub({ scanLinks }: { scanLinks: Record<string, string> }) {
                 className="block rounded-card border-2 border-brass bg-brass/10 p-3 h-full hover:bg-brass/20 transition-colors"
               >
                 <span className="font-display text-2xl leading-none">TA</span>
-                <span className="mt-2 block text-[10px] uppercase tracking-[0.12em] font-bold text-ink min-h-[1.1em]">
+                <span className="mt-2 block text-[11px] uppercase tracking-[0.1em] font-bold text-ink min-h-[1.1em]">
                   Takeaway
                 </span>
-                <span className="mt-0.5 block text-[11px] text-muted">Counter pickup</span>
+                <span className="mt-0.5 block text-xs text-muted">Counter pickup</span>
               </Link>
             </li>
           </ul>

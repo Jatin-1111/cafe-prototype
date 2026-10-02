@@ -85,7 +85,7 @@ export default function MenuPage() {
                       {item.tags?.map((tag) => (
                         <span
                           key={tag}
-                          className={`rounded-full text-[10px] uppercase tracking-[0.14em] font-medium px-2.5 py-0.5 border ${tagTone[tag]}`}
+                          className={`rounded-full text-[11px] uppercase tracking-[0.12em] font-medium px-3 py-0.5 border ${tagTone[tag]}`}
                         >
                           {tagLabel[tag]}
                         </span>

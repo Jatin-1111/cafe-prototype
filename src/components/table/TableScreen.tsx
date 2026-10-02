@@ -90,16 +90,16 @@ export function TableScreen({ table }: { table: string }) {
         <header className="sticky top-0 z-30 bg-paper">
           <ArcadeRule size={20} />
           <div className="px-4 pt-3 flex items-center justify-between gap-3">
-            <span className="inline-flex items-center h-6 px-3 rounded-full bg-brand text-cream text-[10px] font-semibold uppercase tracking-[0.14em]">
+            <span className="inline-flex items-center h-6 px-3 rounded-full bg-brand text-cream text-xs font-semibold uppercase tracking-[0.12em]">
               {spotLabel}
             </span>
-            <span className="text-[10px] uppercase tracking-[0.14em] text-muted">
+            <span className="text-xs uppercase tracking-[0.12em] text-muted">
               {mounted ? `Scanned ${clockTime(scannedAt)}` : "Scanned"}
             </span>
           </div>
 
           <div className="px-4 pt-4 pb-3 text-center">
-            <p className="text-[9px] uppercase tracking-[0.22em] text-muted">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted">
               Est. {cafe.established} · {cafe.city}
             </p>
             <p className="wordmark text-lg mt-2 leading-none">
@@ -128,7 +128,7 @@ export function TableScreen({ table }: { table: string }) {
               type="button"
               onClick={() => setVegOnly((on) => !on)}
               aria-pressed={vegOnly}
-              className={`shrink-0 h-10 px-3 text-[11px] font-semibold uppercase tracking-[0.1em] border transition-colors ${
+              className={`shrink-0 h-10 px-3 text-xs font-semibold uppercase tracking-[0.1em] border transition-colors ${
                 vegOnly
                   ? "border-[#1E7A3C] bg-[#1E7A3C]/10 text-[#1E7A3C]"
                   : "border-line text-muted hover:border-ink hover:text-ink"
@@ -164,7 +164,7 @@ export function TableScreen({ table }: { table: string }) {
                 aria-controls="menu-items"
                 tabIndex={active === category.id ? 0 : -1}
                 onClick={() => setActive(category.id)}
-                className={`shrink-0 rounded-none pb-2.5 text-[11px] uppercase tracking-[0.12em] font-semibold border-b-2 -mb-px transition-colors ${
+                className={`shrink-0 rounded-none pb-2.5 text-xs uppercase tracking-[0.12em] font-semibold border-b-2 -mb-px transition-colors ${
                   active === category.id
                     ? "text-ink border-brass"
                     : "text-muted border-transparent hover:text-ink"
@@ -192,7 +192,7 @@ export function TableScreen({ table }: { table: string }) {
                     {order.lines.length} {order.lines.length === 1 ? "item" : "items"}
                   </span>
                 </span>
-                <span className="text-[10px] uppercase tracking-[0.14em] font-bold text-brand">
+                <span className="text-xs uppercase tracking-[0.12em] font-bold text-brand">
                   {order.billRequested ? "Bill coming" : STATUS_LABEL[order.status]} →
                 </span>
               </Link>
@@ -270,7 +270,7 @@ export function TableScreen({ table }: { table: string }) {
                 </div>
 
                 {out ? (
-                  <span className="shrink-0 mt-1 h-9 px-3 grid place-items-center border-2 border-line text-[10px] font-bold uppercase tracking-[0.1em] text-muted">
+                  <span className="shrink-0 mt-1 h-9 px-3 grid place-items-center border-2 border-line text-xs font-bold uppercase tracking-[0.1em] text-muted">
                     Sold out
                   </span>
                 ) : (
@@ -307,7 +307,7 @@ export function TableScreen({ table }: { table: string }) {
           ) : null}
 
           <li className="py-8 text-center">
-            <p className="text-[11px] text-muted leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               Anything off-menu, ask the counter.
               <br />
               Prices include GST.
@@ -326,7 +326,7 @@ export function TableScreen({ table }: { table: string }) {
               <span className="tnum text-sm">
                 {count} {count === 1 ? "item" : "items"} · {formatINR(total)}
               </span>
-              <span className="text-[11px] uppercase tracking-[0.16em] font-bold">
+              <span className="text-xs uppercase tracking-[0.16em] font-bold">
                 Review order
               </span>
             </button>
@@ -633,11 +633,11 @@ function CheckoutSheet({
           {sending ? "Sending…" : "Send to the counter"}
         </button>
         {failed ? (
-          <p className="mt-3 text-[11px] text-center text-wine">
+          <p className="mt-3 text-xs text-center text-wine">
             That did not reach the counter. Check your connection and try again.
           </p>
         ) : null}
-        <p className="mt-3 text-[11px] text-muted text-center">
+        <p className="mt-3 text-xs text-muted text-center">
           {canSend
             ? "Settle up from this screen or at the till, whichever you prefer."
             : needsPhone

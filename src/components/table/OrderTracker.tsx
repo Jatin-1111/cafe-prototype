@@ -189,7 +189,7 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
           </p>
         ) : null}
 
-        <p className="mt-4 tnum text-[11px] uppercase tracking-[0.14em] text-muted">
+        <p className="mt-4 tnum text-xs uppercase tracking-[0.14em] text-muted">
           Placed {clockTime(order.placedAt)}
           {now ? ` · ${elapsed(order.placedAt, now)} ago` : ""}
         </p>
@@ -207,8 +207,8 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
               }`}
               aria-current={index === stage ? "step" : undefined}
             >
-              <span className="block tnum text-[10px] font-bold opacity-70">0{index + 1}</span>
-              <span className="block mt-1 text-[10px] uppercase tracking-[0.1em] font-bold">
+              <span className="block tnum text-[11px] font-bold opacity-70">0{index + 1}</span>
+              <span className="block mt-1 text-[11px] uppercase tracking-[0.1em] font-bold">
                 {step.label}
               </span>
             </li>
@@ -313,7 +313,7 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
             </div>
           )
         ) : (
-          <p className="text-center text-[11px] text-muted leading-relaxed">
+          <p className="text-center text-xs text-muted leading-relaxed">
             You can settle up once everything has
             {takeaway ? " been handed over." : " reached the table."}
           </p>
@@ -331,14 +331,14 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
             >
               Cancel this order
             </button>
-            <p className="mt-2 tnum text-[11px] text-muted">
+            <p className="mt-2 tnum text-xs text-muted">
               {cancelSecondsLeft}s left to change your mind
             </p>
           </div>
         ) : null}
 
         {cancelNote ? (
-          <p className="mt-4 text-[11px] text-center text-wine">{cancelNote}</p>
+          <p className="mt-4 text-xs text-center text-wine">{cancelNote}</p>
         ) : null}
 
         <Link
@@ -347,7 +347,7 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
         >
           Order something else
         </Link>
-        <p className="mt-4 text-[11px] text-muted text-center leading-relaxed">
+        <p className="mt-4 text-xs text-muted text-center leading-relaxed">
           This screen updates on its own. Leave it open, or come back to it from the menu.
         </p>
       </div>
@@ -451,7 +451,7 @@ function Receipt({ order }: { order: Order }) {
         <p className="mt-2 text-xs text-muted">
           {cafe.address.line1}, {cafe.address.line2}
         </p>
-        <p className="mt-4 tnum text-[11px] uppercase tracking-[0.14em] text-muted">
+        <p className="mt-4 tnum text-xs uppercase tracking-[0.14em] text-muted">
           {order.code} · {order.orderType === "takeaway" ? "Takeaway" : `Table ${order.table}`}
           {order.guest?.name ? ` · ${order.guest.name}` : ""}
         </p>
@@ -530,7 +530,7 @@ function Shell({ table, children }: { table: string; children: React.ReactNode }
       <div className="w-full max-w-md mx-auto flex-1 bg-paper border-x border-line min-h-dvh">
         <ArcadeRule size={20} />
         <div className="px-4 pt-3 flex items-center justify-between">
-          <span className="inline-flex items-center h-6 px-3 rounded-full bg-brand text-cream text-[10px] font-semibold uppercase tracking-[0.14em]">
+          <span className="inline-flex items-center h-6 px-3 rounded-full bg-brand text-cream text-xs font-semibold uppercase tracking-[0.12em]">
             {label}
           </span>
           <Link href="/" className="wordmark text-sm leading-none">

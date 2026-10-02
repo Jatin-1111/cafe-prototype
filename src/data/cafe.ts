@@ -45,6 +45,17 @@ export const cafe = {
     "Wi-Fi on the house, all day",
   ],
 
+  /**
+   * Taken from the cafe's public delivery listing. CONFIRM THIS BEFORE SHOWING
+   * IT TO THEM — platforms disagree and the figure moves. Set `rating` to null
+   * to drop the line entirely rather than risk quoting a number back wrong.
+   */
+  acclaim: {
+    rating: 4.3,
+    reviews: 3500,
+    source: "Zomato",
+  },
+
   /** Added once to a takeaway order, the way most cafes here charge for boxes. */
   packingCharge: 20,
 

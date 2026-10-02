@@ -14,7 +14,7 @@ export function WrongTable({ table, boundTo }: { table: string; boundTo?: string
       <div className="w-full max-w-md mx-auto flex-1 bg-paper border-x border-line min-h-dvh">
         <ArcadeRule size={20} />
         <div className="px-4 pt-3 flex items-center justify-between">
-          <span className="inline-flex items-center h-6 px-3 rounded-full border border-line text-muted text-[10px] font-semibold uppercase tracking-[0.14em]">
+          <span className="inline-flex items-center h-6 px-3 rounded-full border border-line text-muted text-xs font-semibold uppercase tracking-[0.12em]">
             Not scanned in
           </span>
           <Link href="/" className="wordmark text-sm leading-none">
@@ -47,7 +47,7 @@ export function WrongTable({ table, boundTo }: { table: string; boundTo?: string
           ) : null}
 
           <div className="mt-12 pt-6 border-t border-line">
-            <p className="text-[11px] uppercase tracking-[0.14em] text-muted">Prototype</p>
+            <p className="text-xs uppercase tracking-[0.14em] text-muted">Prototype</p>
             <p className="mt-2 text-xs text-muted leading-relaxed max-w-[32ch] mx-auto">
               There is no camera here, so the demo hub stands in for the printed codes.
             </p>
