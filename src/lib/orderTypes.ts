@@ -11,7 +11,14 @@
  * `cancelled` sits outside the flow: an order can only reach it from `new`,
  * within the guest's short window to change their mind.
  */
-export type OrderStatus = "new" | "preparing" | "ready" | "served" | "paid" | "cancelled";
+export type OrderStatus =
+  | "new"
+  | "preparing"
+  | "ready"
+  | "served"
+  | "paid"
+  | "cancelled"
+  | "refunded";
 
 export type PaymentMethod = "upi" | "card" | "cash";
 
@@ -30,6 +37,7 @@ export const STATUS_LABEL: Record<OrderStatus, string> = {
   served: "To settle",
   paid: "Closed",
   cancelled: "Cancelled",
+  refunded: "Refunded",
 };
 
 /** What the button that advances an order should say, per status. */
@@ -40,6 +48,7 @@ export const STATUS_ACTION: Record<OrderStatus, string | null> = {
   served: null, // settled with a payment method instead
   paid: null,
   cancelled: null,
+  refunded: null,
 };
 
 export const PAYMENT_LABEL: Record<PaymentMethod, string> = {
@@ -99,6 +108,9 @@ export type Order = {
   /** When the kitchen expects this at the pass. Set once, at placement. */
   readyBy?: number;
   cancelledAt?: number;
+  /** Who pulled it: the guest inside their window, or the counter voiding it. */
+  cancelledBy?: "guest" | "counter";
+  refundedAt?: number;
 };
 
 /** How long a guest has to pull an order back after sending it. */
@@ -119,7 +131,7 @@ export function canCancel(order: Order, now: number): boolean {
 export function etaCopy(order: Order, now: number): string | null {
   if (!order.readyBy || !now) return null;
   if (order.status === "ready" || order.status === "served" || order.status === "paid") return null;
-  if (order.status === "cancelled") return null;
+  if (order.status === "cancelled" || order.status === "refunded") return null;
 
   const minutes = Math.round((order.readyBy - now) / 60_000);
   if (minutes <= 0) return "Any moment now";
@@ -148,13 +160,43 @@ export function cartCount(lines: OrderLine[]) {
 /** How far along the guest-facing stepper this order is. */
 export function guestStage(status: OrderStatus) {
   if (status === "paid") return GUEST_STAGES.length - 1;
-  if (status === "cancelled") return -1;
+  if (status === "cancelled" || status === "refunded") return -1;
   return GUEST_STAGES.findIndex((s) => s.key === status);
 }
 
 /** An order the counter still has to do something about. */
 export function isOpen(order: Order): boolean {
-  return order.status !== "paid" && order.status !== "cancelled";
+  return (
+    order.status !== "paid" && order.status !== "cancelled" && order.status !== "refunded"
+  );
+}
+
+/** Settled money. A refund takes the order back out of the day's takings. */
+export function countsAsTakings(order: Order): boolean {
+  return order.status === "paid";
+}
+
+/**
+ * A cafe's day does not end at midnight — this one closes at 11:30pm and the
+ * last tickets land after that. Everything from 5am counts as one service day,
+ * so "taken today" still reads correctly at closing time.
+ */
+export const SERVICE_DAY_STARTS_AT_HOUR = 5;
+
+export function startOfServiceDay(now: number): number {
+  const d = new Date(now);
+  d.setHours(SERVICE_DAY_STARTS_AT_HOUR, 0, 0, 0);
+  const start = d.getTime();
+  return start > now ? start - 24 * 60 * 60 * 1000 : start;
+}
+
+export function isFromToday(order: Order, now: number): boolean {
+  return now > 0 && order.placedAt >= startOfServiceDay(now);
+}
+
+/** A status change the counter can still make. Used to guard against two staff colliding. */
+export function isSettled(status: OrderStatus): boolean {
+  return status === "paid" || status === "cancelled" || status === "refunded";
 }
 
 export function elapsed(from: number, now: number) {

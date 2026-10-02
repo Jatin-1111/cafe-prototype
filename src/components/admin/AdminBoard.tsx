@@ -1,12 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { cafe } from "@/data/cafe";
 import { categories, formatINR, itemsIn, menu } from "@/data/menu";
 import {
   advanceOrder,
   clockTime,
+  countsAsTakings,
+  isFromToday,
+  isSettled,
+  refundOrder,
+  setOrderStatus,
+  updateOrderLines,
+  voidOrder,
+  type OrderLine,
+  type Outcome,
   elapsed,
   markPaid,
   PAYMENT_LABEL,
@@ -20,6 +29,14 @@ import {
   type PaymentMethod,
 } from "@/lib/orders";
 import { useConnection, useMounted, useNow, useOrders, useSoldOut } from "@/lib/useStore";
+import {
+  playNewTicketChime,
+  setSoundEnabled,
+  soundEnabled,
+  soundEnabledOnServer,
+  subscribeSound,
+} from "@/lib/counterAlert";
+import { printKot } from "@/lib/printKot";
 
 /** Lanes the counter works, left to right. `paid` is closed out below the board. */
 const LANES: OrderStatus[] = ["new", "preparing", "ready", "served"];
@@ -31,6 +48,7 @@ const laneBar: Record<OrderStatus, string> = {
   served: "bg-ink",
   paid: "bg-status-done",
   cancelled: "bg-muted",
+  refunded: "bg-muted",
 };
 
 /** Minutes after which a ticket in this lane needs attention. */
@@ -43,6 +61,51 @@ const laneWarnAfter: Partial<Record<OrderStatus, number>> = {
 
 const PAYMENT_ORDER: PaymentMethod[] = ["cash", "card", "upi"];
 
+/**
+ * Chimes and badges the tab when a ticket the counter has not seen arrives.
+ * A board that updates silently is a board a busy counter misses.
+ */
+function useNewTicketAlert(orders: Order[], mounted: boolean) {
+  const seen = useRef<Set<string> | null>(null);
+  const [unseen, setUnseen] = useState(0);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const incoming = orders.filter((order) => order.status === "new");
+
+    // First pass only learns what is already there — no chime on page load.
+    if (seen.current === null) {
+      seen.current = new Set(incoming.map((order) => order.id));
+      return;
+    }
+
+    const fresh = incoming.filter((order) => !seen.current!.has(order.id));
+    for (const order of incoming) seen.current.add(order.id);
+    if (!fresh.length) return;
+
+    playNewTicketChime();
+    if (document.visibilityState !== "visible") {
+      setUnseen((count) => count + fresh.length);
+    }
+  }, [orders, mounted]);
+
+  useEffect(() => {
+    const clear = () => {
+      if (document.visibilityState === "visible") setUnseen(0);
+    };
+    document.addEventListener("visibilitychange", clear);
+    return () => document.removeEventListener("visibilitychange", clear);
+  }, []);
+
+  useEffect(() => {
+    const base = "Counter · Refections";
+    document.title = unseen > 0 ? `(${unseen}) ● ${base}` : base;
+    return () => {
+      document.title = base;
+    };
+  }, [unseen]);
+}
+
 export function AdminBoard() {
   const mounted = useMounted();
   const orders = useOrders();
@@ -52,6 +115,31 @@ export function AdminBoard() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [closedOpen, setClosedOpen] = useState(false);
+  const sound = useSyncExternalStore(subscribeSound, soundEnabled, soundEnabledOnServer);
+  const [notice, setNotice] = useState<string | null>(null);
+  /**
+   * Advancing moves a ticket to another lane, which unmounts and remounts it —
+   * so the offer to undo has to live here, above the lanes, or it vanishes the
+   * instant it becomes useful.
+   */
+  const [undo, setUndo] = useState<{ id: string; to: OrderStatus } | null>(null);
+
+  useEffect(() => {
+    if (!undo) return;
+    const timer = window.setTimeout(() => setUndo(null), 12000);
+    return () => window.clearTimeout(timer);
+  }, [undo]);
+
+  useNewTicketAlert(orders, mounted);
+
+  /** Surfaces a refusal from the server — usually another device got there first. */
+  async function run(work: Promise<Outcome>) {
+    const result = await work;
+    if (!result.ok && result.reason) {
+      setNotice(result.reason);
+      window.setTimeout(() => setNotice(null), 4000);
+    }
+  }
 
   const lanes = useMemo(
     () =>
@@ -73,28 +161,39 @@ export function AdminBoard() {
   const closed = useMemo(
     () =>
       orders
-        .filter((order) => order.status === "paid" || order.status === "cancelled")
+        .filter(
+          (order) =>
+            isFromToday(order, now) &&
+            (order.status === "paid" ||
+              order.status === "cancelled" ||
+              order.status === "refunded"),
+        )
         .sort((a, b) => (b.paidAt ?? b.updatedAt) - (a.paidAt ?? a.updatedAt)),
-    [orders],
+    [orders, now],
   );
 
   const stats = useMemo(() => {
+    // Everything but "open" is a figure for today, not for everything the
+    // database has ever held — otherwise the takings are wrong on day two.
+    const today = orders.filter((order) => isFromToday(order, now));
     const open = orders.filter(isOpen);
-    const paid = orders.filter((order) => order.status === "paid");
+    const paid = today.filter(countsAsTakings);
     return {
       open: open.length,
       kitchen: orders.filter((order) => order.status === "preparing").length,
       bills: orders.filter((order) => order.billRequested).length,
       covers: new Set(
-        orders.filter((o) => o.orderType === "table" && o.status !== "cancelled").map((o) => o.table),
+        today
+          .filter((o) => o.orderType === "table" && o.status !== "cancelled")
+          .map((o) => o.table),
       ).size,
-      items: orders
-        .filter((order) => order.status !== "cancelled")
+      items: today
+        .filter((order) => order.status !== "cancelled" && order.status !== "refunded")
         .reduce((sum, order) => sum + order.lines.reduce((n, line) => n + line.qty, 0), 0),
       taken: paid.reduce((sum, order) => sum + order.total, 0),
       outstanding: open.reduce((sum, order) => sum + order.total, 0),
     };
-  }, [orders]);
+  }, [orders, now]);
 
   return (
     <div className="min-h-dvh bg-paper flex flex-col">
@@ -128,6 +227,19 @@ export function AdminBoard() {
             </span>
             <button
               type="button"
+              onClick={() => setSoundEnabled(!sound)}
+              aria-pressed={sound}
+              title={sound ? "Chime on for new tickets" : "Chime off"}
+              className={`h-8 px-3 border text-xs font-semibold transition-colors ${
+                sound
+                  ? "border-status-ready text-status-ready"
+                  : "border-line text-muted hover:border-ink hover:text-ink"
+              }`}
+            >
+              {sound ? "Sound on" : "Sound off"}
+            </button>
+            <button
+              type="button"
               onClick={() => setMenuOpen((open) => !open)}
               aria-expanded={menuOpen}
               className={`h-8 px-3 border text-xs font-semibold transition-colors ${
@@ -148,6 +260,15 @@ export function AdminBoard() {
             </button>
           </div>
         </div>
+
+        {notice ? (
+          <p
+            role="status"
+            className="border-t border-status-new/40 bg-status-new/10 px-4 sm:px-6 py-2 text-xs font-semibold text-status-new"
+          >
+            {notice}
+          </p>
+        ) : null}
 
         {menuOpen ? <Availability soldOut={soldOut} onClose={() => setMenuOpen(false)} /> : null}
       </header>
@@ -190,7 +311,15 @@ export function AdminBoard() {
                       </p>
                     ) : (
                       lane.orders.map((order) => (
-                        <Ticket key={order.id} order={order} now={now} />
+                        <Ticket
+                          key={order.id}
+                          order={order}
+                          now={now}
+                          run={run}
+                          undoTo={undo?.id === order.id ? undo.to : null}
+                          onAdvance={(from) => setUndo({ id: order.id, to: from })}
+                          onUndone={() => setUndo(null)}
+                        />
                       ))
                     )}
                   </div>
@@ -233,17 +362,23 @@ export function AdminBoard() {
                         </span>
                         <span className="ml-auto text-xs text-muted">
                           {order.status === "cancelled"
-                            ? "Cancelled"
-                            : order.paymentMethod
-                              ? PAYMENT_LABEL[order.paymentMethod]
-                              : "—"}
+                            ? order.cancelledBy === "counter"
+                              ? "Voided"
+                              : "Cancelled"
+                            : order.status === "refunded"
+                              ? "Refunded"
+                              : order.paymentMethod
+                                ? PAYMENT_LABEL[order.paymentMethod]
+                                : "—"}
                         </span>
                         <span className="tnum text-xs text-muted w-16 text-right">
                           {order.paidAt ? clockTime(order.paidAt) : "—"}
                         </span>
                         <span
                           className={`tnum font-semibold w-20 text-right ${
-                            order.status === "cancelled" ? "text-muted line-through" : ""
+                            order.status === "cancelled" || order.status === "refunded"
+                              ? "text-muted line-through"
+                              : ""
                           }`}
                         >
                           {formatINR(order.total)}
@@ -301,7 +436,25 @@ function Stat({
   );
 }
 
-function Ticket({ order, now }: { order: Order; now: number }) {
+function Ticket({
+  order,
+  now,
+  run,
+  undoTo,
+  onAdvance,
+  onUndone,
+}: {
+  order: Order;
+  now: number;
+  run: (work: Promise<Outcome>) => Promise<void>;
+  undoTo: OrderStatus | null;
+  onAdvance: (from: OrderStatus) => void;
+  onUndone: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<OrderLine[]>(order.lines);
+  const [confirmVoid, setConfirmVoid] = useState(false);
+
   const action =
     order.orderType === "takeaway" && order.status === "ready"
       ? "Hand over"
@@ -369,10 +522,40 @@ function Ticket({ order, now }: { order: Order; now: number }) {
       ) : null}
 
       <ul className="px-3 py-2.5 space-y-1.5">
-        {order.lines.map((line, index) => (
-          <li key={index} className="flex gap-2.5 text-sm leading-snug">
-            <span className="tnum font-bold text-brand w-6 shrink-0">{line.qty}×</span>
-            <span className="min-w-0">
+        {(editing ? draft : order.lines).map((line, index) => (
+          <li key={index} className="flex gap-2.5 text-sm leading-snug items-start">
+            {editing ? (
+              <span className="flex items-center shrink-0 rounded-full border border-line overflow-hidden">
+                <button
+                  type="button"
+                  aria-label={`One less ${line.name}`}
+                  onClick={() =>
+                    setDraft((lines) =>
+                      lines.map((l, i) => (i === index ? { ...l, qty: l.qty - 1 } : l)),
+                    )
+                  }
+                  className="w-6 h-6 grid place-items-center text-ink hover:bg-sand"
+                >
+                  –
+                </button>
+                <span className="tnum w-5 text-center text-xs font-bold">{line.qty}</span>
+                <button
+                  type="button"
+                  aria-label={`One more ${line.name}`}
+                  onClick={() =>
+                    setDraft((lines) =>
+                      lines.map((l, i) => (i === index ? { ...l, qty: l.qty + 1 } : l)),
+                    )
+                  }
+                  className="w-6 h-6 grid place-items-center text-ink hover:bg-sand"
+                >
+                  +
+                </button>
+              </span>
+            ) : (
+              <span className="tnum font-bold text-brand w-6 shrink-0">{line.qty}×</span>
+            )}
+            <span className={`min-w-0 ${editing && line.qty <= 0 ? "line-through text-muted" : ""}`}>
               {line.name}
               {line.options ? (
                 <span className="block text-xs text-muted">
@@ -383,6 +566,31 @@ function Ticket({ order, now }: { order: Order; now: number }) {
           </li>
         ))}
       </ul>
+
+      {editing ? (
+        <div className="mx-3 mb-2.5 flex gap-1.5">
+          <button
+            type="button"
+            onClick={async () => {
+              await run(updateOrderLines(order.id, draft));
+              setEditing(false);
+            }}
+            className="flex-1 h-8 rounded-full bg-ink text-cream text-[11px] font-semibold uppercase tracking-[0.1em] hover:bg-brand transition-colors"
+          >
+            Save changes
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setDraft(order.lines);
+              setEditing(false);
+            }}
+            className="h-8 px-3 rounded-full border border-line text-[11px] font-semibold uppercase tracking-[0.1em] text-muted hover:border-ink hover:text-ink transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      ) : null}
 
       {order.note ? (
         <p className="mx-3 mb-2.5 rounded-sm border-l-2 border-brass bg-brass/10 px-2.5 py-1.5 text-xs text-ink-2">
@@ -402,8 +610,8 @@ function Ticket({ order, now }: { order: Order; now: number }) {
                 <button
                   key={method}
                   type="button"
-                  onClick={() => markPaid(order.id, method)}
-                  className="h-8 border border-ink text-[11px] font-bold uppercase tracking-[0.06em] hover:bg-ink hover:text-sand transition-colors"
+                  onClick={() => void run(markPaid(order.id, method))}
+                  className="h-8 rounded-full border border-ink text-[11px] font-semibold uppercase tracking-[0.06em] hover:bg-ink hover:text-cream transition-colors"
                 >
                   {PAYMENT_LABEL[method]}
                 </button>
@@ -416,14 +624,95 @@ function Ticket({ order, now }: { order: Order; now: number }) {
             {action ? (
               <button
                 type="button"
-                onClick={() => advanceOrder(order.id)}
-                className="h-8 px-3 bg-ink text-sand text-[11px] font-bold uppercase tracking-[0.1em] hover:bg-brand transition-colors"
+                onClick={() => {
+                  onAdvance(order.status);
+                  void run(advanceOrder(order.id));
+                }}
+                className="h-8 px-3 rounded-full bg-ink text-cream text-[11px] font-semibold uppercase tracking-[0.1em] hover:bg-brand transition-colors"
               >
                 {action}
               </button>
             ) : null}
           </div>
         )}
+
+        {/* Undo, edit, void, print — the things a counter needs when something
+            goes wrong, which is most shifts. */}
+        <div className="mt-2.5 pt-2 border-t border-line-soft flex flex-wrap items-center gap-x-3 gap-y-1">
+          {undoTo ? (
+            <button
+              type="button"
+              onClick={async () => {
+                await run(setOrderStatus(order.id, undoTo));
+                onUndone();
+              }}
+              className="text-[11px] font-semibold uppercase tracking-[0.08em] text-brand underline underline-offset-2"
+            >
+              Undo
+            </button>
+          ) : null}
+
+          {!isSettled(order.status) ? (
+            <button
+              type="button"
+              onClick={() => {
+                setDraft(order.lines);
+                setEditing((on) => !on);
+              }}
+              className="text-[11px] uppercase tracking-[0.08em] text-muted hover:text-ink transition-colors"
+            >
+              {editing ? "Editing" : "Edit"}
+            </button>
+          ) : null}
+
+          <button
+            type="button"
+            onClick={() => printKot(order)}
+            className="text-[11px] uppercase tracking-[0.08em] text-muted hover:text-ink transition-colors"
+          >
+            Print
+          </button>
+
+          {order.status === "paid" ? (
+            <button
+              type="button"
+              onClick={() => void run(refundOrder(order.id))}
+              className="ml-auto text-[11px] uppercase tracking-[0.08em] text-status-new hover:underline"
+            >
+              Refund
+            </button>
+          ) : !isSettled(order.status) ? (
+            confirmVoid ? (
+              <span className="ml-auto flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await run(voidOrder(order.id));
+                    setConfirmVoid(false);
+                  }}
+                  className="text-[11px] font-semibold uppercase tracking-[0.08em] text-status-new"
+                >
+                  Void it
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmVoid(false)}
+                  className="text-[11px] uppercase tracking-[0.08em] text-muted"
+                >
+                  Keep
+                </button>
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmVoid(true)}
+                className="ml-auto text-[11px] uppercase tracking-[0.08em] text-muted hover:text-status-new transition-colors"
+              >
+                Void
+              </button>
+            )
+          ) : null}
+        </div>
       </div>
     </article>
   );

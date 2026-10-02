@@ -8,10 +8,13 @@ import {
   getState,
   markPaid,
   placeOrder,
+  refundOrder,
   requestBill,
   resetDemo,
   setOrderStatus,
   toggleSoldOut,
+  updateOrderLines,
+  voidOrder,
 } from "@/lib/ordersRepo";
 import type { Guest, OrderLine, OrderStatus, OrderType, PaymentMethod } from "@/lib/orderTypes";
 
@@ -27,13 +30,30 @@ export const dynamic = "force-dynamic";
 
 type Action =
   | { type: "place"; table: string; lines: OrderLine[]; orderType?: OrderType; guest?: Guest; note?: string }
-  | { type: "advance"; id: string }
-  | { type: "status"; id: string; status: OrderStatus }
+  | { type: "advance"; id: string; from?: OrderStatus }
+  | { type: "status"; id: string; status: OrderStatus; from?: OrderStatus }
+  | { type: "void"; id: string }
+  | { type: "refund"; id: string }
+  | { type: "editLines"; id: string; lines: OrderLine[] }
   | { type: "bill"; id: string }
   | { type: "cancel"; id: string }
   | { type: "pay"; id: string; method: PaymentMethod }
   | { type: "soldOut"; itemId: string }
   | { type: "reset" };
+
+/**
+ * Writes that can lose a race reply 409 with the reason and the current state,
+ * so the caller can correct itself and say what happened rather than silently
+ * disagreeing with the other device.
+ */
+async function settle(work: Promise<{ ok: boolean; reason?: string }>) {
+  const result = await work;
+  const state = await getState();
+  if (!result.ok) {
+    return NextResponse.json({ error: result.reason, state }, { status: 409 });
+  }
+  return NextResponse.json({ state });
+}
 
 export async function POST(request: NextRequest) {
   let action: Action;
@@ -73,8 +93,13 @@ export async function POST(request: NextRequest) {
       }
 
       case "advance":
-        await advanceOrder(action.id);
-        break;
+        return await settle(advanceOrder(action.id, action.from));
+      case "void":
+        return await settle(voidOrder(action.id));
+      case "refund":
+        return await settle(refundOrder(action.id));
+      case "editLines":
+        return await settle(updateOrderLines(action.id, action.lines));
       case "cancel": {
         const result = await cancelOrder(action.id);
         if (!result.ok) {
@@ -86,14 +111,12 @@ export async function POST(request: NextRequest) {
         break;
       }
       case "status":
-        await setOrderStatus(action.id, action.status);
-        break;
+        return await settle(setOrderStatus(action.id, action.status, action.from));
       case "bill":
         await requestBill(action.id);
         break;
       case "pay":
-        await markPaid(action.id, action.method);
-        break;
+        return await settle(markPaid(action.id, action.method));
       case "soldOut":
         await toggleSoldOut(action.itemId);
         break;

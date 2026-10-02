@@ -134,7 +134,9 @@ async function pull(): Promise<void> {
   }
 }
 
-async function send(action: Record<string, unknown>): Promise<{ ok: boolean; order?: Order }> {
+export type Outcome = { ok: boolean; order?: Order; reason?: string };
+
+async function send(action: Record<string, unknown>): Promise<Outcome> {
   try {
     const response = await fetch("/api/actions", {
       method: "POST",
@@ -149,13 +151,13 @@ async function send(action: Record<string, unknown>): Promise<{ ok: boolean; ord
     if (data.state) apply(data.state);
     if (!response.ok) {
       console.warn("[orders]", action.type, data.error ?? response.status);
-      return { ok: false };
+      return { ok: false, reason: data.error };
     }
     channel?.postMessage("orders");
     return { ok: true, order: data.order };
   } catch {
     setState({ ...state, online: false });
-    return { ok: false };
+    return { ok: false, reason: "Could not reach the counter. Check the connection." };
   }
 }
 
@@ -309,7 +311,8 @@ function optimistic(id: string, change: (order: Order) => Order) {
   });
 }
 
-export async function advanceOrder(id: string) {
+export async function advanceOrder(id: string): Promise<Outcome> {
+  const from = state.orders.find((order) => order.id === id)?.status;
   optimistic(id, (order) => {
     const at = STATUS_FLOW.indexOf(order.status);
     return {
@@ -318,20 +321,34 @@ export async function advanceOrder(id: string) {
       updatedAt: Date.now(),
     };
   });
-  await send({ type: "advance", id });
+  return send({ type: "advance", id, from });
 }
 
-export async function setOrderStatus(id: string, status: OrderStatus) {
+export async function setOrderStatus(id: string, status: OrderStatus): Promise<Outcome> {
+  const from = state.orders.find((order) => order.id === id)?.status;
   optimistic(id, (order) => ({ ...order, status, updatedAt: Date.now() }));
-  await send({ type: "status", id, status });
+  return send({ type: "status", id, status, from });
 }
 
-export async function requestBill(id: string) {
+/** The counter pulling a ticket. Not optimistic — the server decides if it still can be. */
+export async function voidOrder(id: string): Promise<Outcome> {
+  return send({ type: "void", id });
+}
+
+export async function refundOrder(id: string): Promise<Outcome> {
+  return send({ type: "refund", id });
+}
+
+export async function updateOrderLines(id: string, lines: OrderLine[]): Promise<Outcome> {
+  return send({ type: "editLines", id, lines });
+}
+
+export async function requestBill(id: string): Promise<Outcome> {
   optimistic(id, (order) => ({ ...order, billRequested: true, updatedAt: Date.now() }));
-  await send({ type: "bill", id });
+  return send({ type: "bill", id });
 }
 
-export async function markPaid(id: string, method: PaymentMethod) {
+export async function markPaid(id: string, method: PaymentMethod): Promise<Outcome> {
   const now = Date.now();
   optimistic(id, (order) => ({
     ...order,
@@ -341,7 +358,7 @@ export async function markPaid(id: string, method: PaymentMethod) {
     updatedAt: now,
     billRequested: false,
   }));
-  await send({ type: "pay", id, method });
+  return send({ type: "pay", id, method });
 }
 
 /**
@@ -354,14 +371,14 @@ export async function cancelOrder(id: string): Promise<boolean> {
   return result.ok;
 }
 
-export async function toggleSoldOut(itemId: string) {
+export async function toggleSoldOut(itemId: string): Promise<Outcome> {
   const soldOut = state.soldOut.includes(itemId)
     ? state.soldOut.filter((id) => id !== itemId)
     : [...state.soldOut, itemId];
   setState({ ...state, soldOut });
-  await send({ type: "soldOut", itemId });
+  return send({ type: "soldOut", itemId });
 }
 
-export async function resetDemo() {
-  await send({ type: "reset" });
+export async function resetDemo(): Promise<Outcome> {
+  return send({ type: "reset" });
 }

@@ -8,6 +8,7 @@ import {
   CANCEL_WINDOW_MS,
   STATUS_FLOW,
   cartTotal,
+  isSettled,
   type Guest,
   type Order,
   type OrderLine,
@@ -133,19 +134,103 @@ export async function placeOrder(input: {
   return order;
 }
 
-/** Moves an order one lane along the flow. */
-export async function advanceOrder(id: string): Promise<void> {
+export type WriteResult = { ok: boolean; reason?: string };
+
+/**
+ * Moves an order one lane along the flow.
+ *
+ * `from` is the status the caller believed it was in. The update only matches
+ * while that is still true, so two people tapping the same ticket on two
+ * devices cannot double-advance it — the second one is told instead.
+ */
+export async function advanceOrder(id: string, from?: OrderStatus): Promise<WriteResult> {
   const col = await orders();
   const current = await col.findOne({ _id: id }, { projection: { status: 1 } });
-  if (!current) return;
+  if (!current) return { ok: false, reason: "That ticket is no longer on the board." };
+  if (isSettled(current.status)) return { ok: false, reason: "That ticket is already closed." };
 
   const at = STATUS_FLOW.indexOf(current.status);
   const to = STATUS_FLOW[Math.min(at + 1, STATUS_FLOW.length - 1)];
-  await col.updateOne({ _id: id }, { $set: { status: to, updatedAt: Date.now() } });
+
+  const result = await col.updateOne(
+    { _id: id, ...(from ? { status: from } : {}) },
+    { $set: { status: to, updatedAt: Date.now() } },
+  );
+  if (result.matchedCount === 0) {
+    return { ok: false, reason: "Someone else moved this ticket first." };
+  }
+  return { ok: true };
 }
 
-export async function setOrderStatus(id: string, status: OrderStatus): Promise<void> {
-  await (await orders()).updateOne({ _id: id }, { $set: { status, updatedAt: Date.now() } });
+export async function setOrderStatus(
+  id: string,
+  status: OrderStatus,
+  from?: OrderStatus,
+): Promise<WriteResult> {
+  const result = await (await orders()).updateOne(
+    { _id: id, ...(from ? { status: from } : {}) },
+    { $set: { status, updatedAt: Date.now() } },
+  );
+  if (result.matchedCount === 0) {
+    return { ok: false, reason: "Someone else moved this ticket first." };
+  }
+  return { ok: true };
+}
+
+/** The counter pulling a ticket at any point before it is settled. */
+export async function voidOrder(id: string): Promise<WriteResult> {
+  const col = await orders();
+  const current = await col.findOne({ _id: id }, { projection: { status: 1 } });
+  if (!current) return { ok: false, reason: "That ticket is no longer on the board." };
+  if (current.status === "paid") {
+    return { ok: false, reason: "That one is paid — refund it instead." };
+  }
+  if (isSettled(current.status)) return { ok: false, reason: "That ticket is already closed." };
+
+  const now = Date.now();
+  await col.updateOne(
+    { _id: id },
+    { $set: { status: "cancelled" as OrderStatus, cancelledAt: now, cancelledBy: "counter", updatedAt: now } },
+  );
+  return { ok: true };
+}
+
+/**
+ * Money back after payment. Flags the order and takes it out of the day's
+ * takings — it does not reach the payment provider, which is a real
+ * integration and not something to fake.
+ */
+export async function refundOrder(id: string): Promise<WriteResult> {
+  const now = Date.now();
+  const result = await (await orders()).updateOne(
+    { _id: id, status: "paid" },
+    { $set: { status: "refunded" as OrderStatus, refundedAt: now, updatedAt: now } },
+  );
+  if (result.matchedCount === 0) {
+    return { ok: false, reason: "Only a paid ticket can be refunded." };
+  }
+  return { ok: true };
+}
+
+/** Edit the lines on a ticket that has not been settled, recomputing the total. */
+export async function updateOrderLines(id: string, lines: OrderLine[]): Promise<WriteResult> {
+  const col = await orders();
+  const current = await col.findOne({ _id: id }, { projection: { status: 1 } });
+  if (!current) return { ok: false, reason: "That ticket is no longer on the board." };
+  if (isSettled(current.status)) {
+    return { ok: false, reason: "That ticket is already closed." };
+  }
+
+  const clean = lines.filter((line) => line.qty > 0);
+  if (!clean.length) {
+    return { ok: false, reason: "An order needs at least one item — void it instead." };
+  }
+
+  await col.updateOne(
+    { _id: id },
+    { $set: { lines: clean, total: cartTotal(clean), updatedAt: Date.now() } },
+  );
+  return { ok: true };
 }
 
 /** Guest asked for the bill. Flags the ticket on the counter board. */
@@ -156,10 +241,10 @@ export async function requestBill(id: string): Promise<void> {
   );
 }
 
-export async function markPaid(id: string, method: PaymentMethod): Promise<void> {
+export async function markPaid(id: string, method: PaymentMethod): Promise<WriteResult> {
   const now = Date.now();
-  await (await orders()).updateOne(
-    { _id: id },
+  const result = await (await orders()).updateOne(
+    { _id: id, status: { $nin: ["paid", "cancelled", "refunded"] } },
     {
       $set: {
         status: "paid" as OrderStatus,
@@ -170,6 +255,10 @@ export async function markPaid(id: string, method: PaymentMethod): Promise<void>
       },
     },
   );
+  if (result.matchedCount === 0) {
+    return { ok: false, reason: "That ticket was already settled." };
+  }
+  return { ok: true };
 }
 
 /**
