@@ -3,7 +3,7 @@
  *
  * Prices marked below come from the cafe's published listings; the rest are
  * representative of their range (roughly ₹1,000 for two) and sit in the
- * cuisines they actually serve — Italian, Continental, Chinese, North Indian,
+ * cuisines they actually serve: Italian, Continental, Chinese, North Indian,
  * coffee and desserts. Swap this file for the real card before any client
  * review; nothing else in the app needs to change.
  */
@@ -20,10 +20,10 @@ export type MenuItem = {
   category: CategoryId;
   veg: boolean;
   tags?: MenuTag[];
-  /** Longer note shown on the public menu only — the table screen stays terse. */
+  /** Longer note shown on the public menu only: the table screen stays terse. */
   note?: string;
   /**
-   * Options a guest picks at the table. A choice may carry a price delta —
+   * Options a guest picks at the table. A choice may carry a price delta ,
    * oat milk and a cheese-burst base are not free anywhere, and a model that
    * assumes they are cannot be shown to an owner.
    */
@@ -399,7 +399,7 @@ export function prepMinutesFor(item: MenuItem): number {
   return item.prepMinutes ?? CATEGORY_PREP_MINUTES[item.category];
 }
 
-/** The four items the ordering screen leads with — the ones we have photographs of. */
+/** The four items the ordering screen leads with: the ones we have photographs of. */
 export const popular = menu.filter((item) => item.photo);
 
 export function formatINR(paise: number) {

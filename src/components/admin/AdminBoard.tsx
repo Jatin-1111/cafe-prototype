@@ -37,6 +37,7 @@ import {
   subscribeSound,
 } from "@/lib/counterAlert";
 import { printKot } from "@/lib/printKot";
+import { ChevronDownIcon, MinusIcon, PlusIcon } from "@/components/Icon";
 
 /** Lanes the counter works, left to right. `paid` is closed out below the board. */
 const LANES: OrderStatus[] = ["new", "preparing", "ready", "served"];
@@ -73,7 +74,7 @@ function useNewTicketAlert(orders: Order[], mounted: boolean) {
     if (!mounted) return;
     const incoming = orders.filter((order) => order.status === "new");
 
-    // First pass only learns what is already there — no chime on page load.
+    // First pass only learns what is already there: no chime on page load.
     if (seen.current === null) {
       seen.current = new Set(incoming.map((order) => order.id));
       return;
@@ -118,7 +119,7 @@ export function AdminBoard() {
   const sound = useSyncExternalStore(subscribeSound, soundEnabled, soundEnabledOnServer);
   const [notice, setNotice] = useState<string | null>(null);
   /**
-   * Advancing moves a ticket to another lane, which unmounts and remounts it —
+   * Advancing moves a ticket to another lane, which unmounts and remounts it ,
    * so the offer to undo has to live here, above the lanes, or it vanishes the
    * instant it becomes useful.
    */
@@ -132,7 +133,7 @@ export function AdminBoard() {
 
   useNewTicketAlert(orders, mounted);
 
-  /** Surfaces a refusal from the server — usually another device got there first. */
+  /** Surfaces a refusal from the server: usually another device got there first. */
   async function run(work: Promise<Outcome>) {
     const result = await work;
     if (!result.ok && result.reason) {
@@ -174,7 +175,7 @@ export function AdminBoard() {
 
   const stats = useMemo(() => {
     // Everything but "open" is a figure for today, not for everything the
-    // database has ever held — otherwise the takings are wrong on day two.
+    // database has ever held: otherwise the takings are wrong on day two.
     const today = orders.filter((order) => isFromToday(order, now));
     const open = orders.filter(isOpen);
     const paid = today.filter(countsAsTakings);
@@ -223,7 +224,7 @@ export function AdminBoard() {
               {online ? (loaded ? "Live" : "Connecting…") : "Offline"}
             </span>
             <span className="tnum text-sm text-ink-2 hidden sm:inline">
-              {mounted && now ? clockTime(now) : "—"}
+              {mounted && now ? clockTime(now) : "·"}
             </span>
             <button
               type="button"
@@ -338,9 +339,11 @@ export function AdminBoard() {
                 <span aria-hidden className={`w-2.5 h-2.5 ${laneBar.paid}`} />
                 Closed today
                 <span className="tnum text-muted">{closed.length}</span>
-                <span aria-hidden className="text-muted">
-                  {closedOpen ? "▲" : "▼"}
-                </span>
+                <ChevronDownIcon
+                  className={`w-4 h-4 text-muted transition-transform ${
+                    closedOpen ? "rotate-180" : ""
+                  }`}
+                />
               </button>
 
               {closedOpen ? (
@@ -369,10 +372,10 @@ export function AdminBoard() {
                               ? "Refunded"
                               : order.paymentMethod
                                 ? PAYMENT_LABEL[order.paymentMethod]
-                                : "—"}
+                                : "·"}
                         </span>
                         <span className="tnum text-xs text-muted w-16 text-right">
-                          {order.paidAt ? clockTime(order.paidAt) : "—"}
+                          {order.paidAt ? clockTime(order.paidAt) : "·"}
                         </span>
                         <span
                           className={`tnum font-semibold w-20 text-right ${
@@ -396,7 +399,7 @@ export function AdminBoard() {
       <footer className="border-t border-line">
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6 py-4 flex flex-wrap gap-x-6 gap-y-2 items-center justify-between text-xs text-muted">
           <p>
-            Prototype. Orders live in this browser and sync across tabs — open the{" "}
+            Prototype. Orders sync across every device. Open the{" "}
             <Link href="/demo" className="text-brand font-semibold hover:underline">
               demo hub
             </Link>{" "}
@@ -500,7 +503,7 @@ function Ticket({
               veryLate ? "text-status-new" : late ? "text-[#8a6410]" : "text-muted"
             }`}
           >
-            {now ? elapsed(order.placedAt, now) : "—"}
+            {now ? elapsed(order.placedAt, now) : "·"}
           </span>
         </span>
       </div>
@@ -514,7 +517,7 @@ function Ticket({
             <span className="tnum text-xs text-muted">{order.guest.phone}</span>
           ) : null}
           {order.billRequested ? (
-            <span className="ml-auto rounded-full text-[10px] font-semibold uppercase tracking-[0.1em] bg-brand text-cream px-2.5 py-0.5">
+            <span className="ml-auto rounded-[6px] text-[10px] font-semibold uppercase tracking-[0.1em] bg-brand text-cream px-2.5 py-0.5">
               Bill asked for
             </span>
           ) : null}
@@ -525,7 +528,7 @@ function Ticket({
         {(editing ? draft : order.lines).map((line, index) => (
           <li key={index} className="flex gap-2.5 text-sm leading-snug items-start">
             {editing ? (
-              <span className="flex items-center shrink-0 rounded-full border border-line overflow-hidden">
+              <span className="flex items-center shrink-0 rounded-[6px] border border-line overflow-hidden">
                 <button
                   type="button"
                   aria-label={`One less ${line.name}`}
@@ -536,7 +539,7 @@ function Ticket({
                   }
                   className="w-6 h-6 grid place-items-center text-ink hover:bg-sand"
                 >
-                  –
+                  <MinusIcon className="w-3.5 h-3.5" />
                 </button>
                 <span className="tnum w-5 text-center text-xs font-bold">{line.qty}</span>
                 <button
@@ -549,7 +552,7 @@ function Ticket({
                   }
                   className="w-6 h-6 grid place-items-center text-ink hover:bg-sand"
                 >
-                  +
+                  <PlusIcon className="w-3.5 h-3.5" />
                 </button>
               </span>
             ) : (
@@ -578,7 +581,7 @@ function Ticket({
               await run(updateOrderLines(order.id, draft));
               setEditing(false);
             }}
-            className="flex-1 h-8 rounded-full bg-ink text-cream text-[11px] font-semibold uppercase tracking-[0.1em] hover:bg-brand transition-colors"
+            className="flex-1 h-8 rounded-[6px] bg-ink text-cream text-[11px] font-semibold uppercase tracking-[0.1em] hover:bg-brand transition-colors"
           >
             Save changes
           </button>
@@ -588,7 +591,7 @@ function Ticket({
               setDraft(order.lines);
               setEditing(false);
             }}
-            className="h-8 px-3 rounded-full border border-line text-[11px] font-semibold uppercase tracking-[0.1em] text-muted hover:border-ink hover:text-ink transition-colors"
+            className="h-8 px-3 rounded-[6px] border border-line text-[11px] font-semibold uppercase tracking-[0.1em] text-muted hover:border-ink hover:text-ink transition-colors"
           >
             Cancel
           </button>
@@ -626,7 +629,7 @@ function Ticket({
                   key={method}
                   type="button"
                   onClick={() => void run(markPaid(order.id, method))}
-                  className="h-8 rounded-full border border-ink text-[11px] font-semibold uppercase tracking-[0.06em] hover:bg-ink hover:text-cream transition-colors"
+                  className="h-8 rounded-[6px] border border-ink text-[11px] font-semibold uppercase tracking-[0.06em] hover:bg-ink hover:text-cream transition-colors"
                 >
                   {PAYMENT_LABEL[method]}
                 </button>
@@ -643,7 +646,7 @@ function Ticket({
                   onAdvance(order.status);
                   void run(advanceOrder(order.id));
                 }}
-                className="h-8 px-3 rounded-full bg-ink text-cream text-[11px] font-semibold uppercase tracking-[0.1em] hover:bg-brand transition-colors"
+                className="h-8 px-3 rounded-[6px] bg-ink text-cream text-[11px] font-semibold uppercase tracking-[0.1em] hover:bg-brand transition-colors"
               >
                 {action}
               </button>
@@ -651,7 +654,7 @@ function Ticket({
           </div>
         )}
 
-        {/* Undo, edit, void, print — the things a counter needs when something
+        {/* Undo, edit, void, print: the things a counter needs when something
             goes wrong, which is most shifts. */}
         <div className="mt-2.5 pt-2 border-t border-line-soft flex flex-wrap items-center gap-x-3 gap-y-1">
           {undoTo ? (
@@ -767,7 +770,7 @@ function Availability({ soldOut, onClose }: { soldOut: string[]; onClose: () => 
                         type="button"
                         onClick={() => toggleSoldOut(item.id)}
                         aria-pressed={off}
-                        className={`w-full flex items-center gap-2 rounded-full px-3 py-1.5 text-left text-xs border transition-colors ${
+                        className={`w-full flex items-center gap-2 rounded-[6px] px-3 py-1.5 text-left text-xs border transition-colors ${
                           off
                             ? "border-status-new bg-status-new/5 text-status-new line-through"
                             : "border-transparent text-ink-2 hover:border-line hover:bg-paper"

@@ -17,12 +17,12 @@ import type {
 /**
  * Returns null for an id the menu no longer has. Seed data drifts whenever the
  * menu is re-skinned for a new cafe, and a stale id must never be able to throw
- * on first load — that took the whole app down once already.
+ * on first load: that took the whole app down once already.
  */
 function line(itemId: string, qty: number, options?: Record<string, string>): OrderLine | null {
   const item: MenuItem | undefined = menuById.get(itemId);
   if (!item) {
-    console.warn(`[seed] menu item "${itemId}" no longer exists — dropped from the demo data`);
+    console.warn(`[seed] menu item "${itemId}" no longer exists, dropped from the demo data`);
     return null;
   }
   return { itemId, name: item.name, price: item.price, qty, options };

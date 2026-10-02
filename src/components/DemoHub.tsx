@@ -7,6 +7,7 @@ import { resetDemo, STATUS_LABEL } from "@/lib/orders";
 import { useMounted, useOrders } from "@/lib/useStore";
 import { ArcadeRule } from "@/components/ArcadeRule";
 import { FauxQR } from "@/components/FauxQR";
+import { ChevronRightIcon } from "@/components/Icon";
 
 const tables = Array.from({ length: cafe.tables }, (_, i) => String(i + 1).padStart(2, "0"));
 
@@ -213,8 +214,9 @@ function SurfaceCard({
         {title}
       </span>
       <span className="mt-3 text-sm text-muted leading-relaxed flex-1">{body}</span>
-      <span className="mt-5 text-xs font-bold uppercase tracking-[0.12em] text-brand">
-        Open →
+      <span className="mt-5 inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.12em] text-brand">
+        Open
+        <ChevronRightIcon className="w-3.5 h-3.5" />
       </span>
     </Link>
   );

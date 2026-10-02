@@ -15,7 +15,7 @@ import { isKnownTable, TABLES } from "@/lib/tables";
    The scan route checks the key, then binds the browser to that
    table with an httpOnly cookie. After that the guest can move
    around the app freely, but they cannot reach another table
-   without physically scanning the code sitting on it — which is
+   without physically scanning the code sitting on it: which is
    exactly the rule the room already enforces.
    ============================================================ */
 
@@ -32,7 +32,7 @@ function secret(): string {
   if (process.env.NODE_ENV === "production" && !fromEnv) {
     // Loud in production, because the fallback below is public knowledge.
     console.warn(
-      "[tableAuth] TABLE_SECRET is not set — table codes are using the shared demo secret.",
+      "[tableAuth] TABLE_SECRET is not set. Table codes are using the shared demo secret.",
     );
   }
   return "refections-prototype-demo-secret-do-not-ship";
@@ -58,7 +58,7 @@ export function scanLink(table: string): string {
   return `/scan/${table}?k=${signTable(table)}`;
 }
 
-/** Every table's scan link — used by the demo hub to stand in for the printed codes. */
+/** Every table's scan link: used by the demo hub to stand in for the printed codes. */
 export function allScanLinks(): Record<string, string> {
   return Object.fromEntries(TABLES.map((table) => [table, scanLink(table)]));
 }

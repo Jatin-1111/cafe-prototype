@@ -13,13 +13,13 @@ type Props = {
    * file lands. Pass null when the caller sets an explicit height instead.
    */
   aspect?: string | null;
-  /** Arch-topped frame — the shape every niche and window in the room takes. */
+  /** Arch-topped frame: the shape every niche and window in the room takes. */
   arch?: boolean;
 };
 
 /**
  * A photography slot. Renders the real image once the shot is marked ready in
- * the manifest, and a plate naming the missing shot until then — either way the
+ * the manifest, and a plate naming the missing shot until then: either way the
  * box occupies the same space, so dropping files in never reflows the page.
  */
 export function Photo({ shot, className = "", sizes, priority, aspect, arch }: Props) {

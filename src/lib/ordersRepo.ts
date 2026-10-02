@@ -22,7 +22,7 @@ import {
 /* ============================================================
    Every read and write of the shared order state.
 
-   The browser never talks to Mongo directly — it goes through the
+   The browser never talks to Mongo directly: it goes through the
    route handlers in /api, which call into here. That keeps the
    connection string on the server and means a phone and the counter
    laptop are genuinely looking at the same data.
@@ -183,7 +183,7 @@ export type WriteResult = { ok: boolean; reason?: string };
  *
  * `from` is the status the caller believed it was in. The update only matches
  * while that is still true, so two people tapping the same ticket on two
- * devices cannot double-advance it — the second one is told instead.
+ * devices cannot double-advance it: the second one is told instead.
  */
 export async function advanceOrder(id: string, from?: OrderStatus): Promise<WriteResult> {
   const col = await orders();
@@ -192,7 +192,7 @@ export async function advanceOrder(id: string, from?: OrderStatus): Promise<Writ
   if (isSettled(current.status)) return { ok: false, reason: "That ticket is already closed." };
 
   // Advancing walks the service lanes only. "paid" is reachable solely through
-  // markPaid, which records how the money arrived — otherwise one extra tap
+  // markPaid, which records how the money arrived: otherwise one extra tap
   // closes a bill with no payment method against it.
   const at = SERVICE_FLOW.indexOf(current.status);
   if (at === -1 || at === SERVICE_FLOW.length - 1) {
@@ -226,7 +226,7 @@ export async function setOrderStatus(
 }
 
 /**
- * The guest saying they have sent the money. It does not close the bill — the
+ * The guest saying they have sent the money. It does not close the bill: the
  * counter confirms against their own UPI notification, which is how a cafe
  * without a gateway actually works, and keeps "I have paid" from being a
  * button that settles a tab.
@@ -253,7 +253,7 @@ export async function voidOrder(id: string): Promise<WriteResult> {
   const current = await col.findOne({ _id: id }, { projection: { status: 1 } });
   if (!current) return { ok: false, reason: "That ticket is no longer on the board." };
   if (current.status === "paid") {
-    return { ok: false, reason: "That one is paid — refund it instead." };
+    return { ok: false, reason: "That one is paid. Refund it instead." };
   }
   if (isSettled(current.status)) return { ok: false, reason: "That ticket is already closed." };
 
@@ -267,7 +267,7 @@ export async function voidOrder(id: string): Promise<WriteResult> {
 
 /**
  * Money back after payment. Flags the order and takes it out of the day's
- * takings — it does not reach the payment provider, which is a real
+ * takings: it does not reach the payment provider, which is a real
  * integration and not something to fake.
  */
 export async function refundOrder(id: string): Promise<WriteResult> {
@@ -298,7 +298,7 @@ export async function updateOrderLines(id: string, lines: OrderLine[]): Promise<
     soldOut.filter((itemId) => !lines.some((line) => line.itemId === itemId)),
   );
   if (!clean.length) {
-    return { ok: false, reason: "An order needs at least one item — void it instead." };
+    return { ok: false, reason: "An order needs at least one item. Void it instead." };
   }
 
   const existing = await col.findOne({ _id: id }, { projection: { packing: 1 } });
@@ -341,7 +341,7 @@ export async function markPaid(id: string, method: PaymentMethod): Promise<Write
 }
 
 /**
- * The guest pulling an order back. Only from `new`, only inside the window —
+ * The guest pulling an order back. Only from `new`, only inside the window ,
  * both checked here rather than in the browser, since the browser's clock and
  * its idea of the status are both things a guest could lean on.
  */
@@ -354,7 +354,7 @@ export async function cancelOrder(id: string): Promise<{ ok: boolean; reason?: s
     return { ok: false, reason: "The kitchen has already started this one." };
   }
   if (Date.now() - current.placedAt > CANCEL_WINDOW_MS) {
-    return { ok: false, reason: "Too late to cancel from here — ask the counter." };
+    return { ok: false, reason: "Too late to cancel from here. Ask the counter." };
   }
 
   await col.updateOne(

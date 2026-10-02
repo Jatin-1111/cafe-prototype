@@ -130,14 +130,14 @@ export function ReserveForm() {
           name="note"
           rows={3}
           className="w-full p-3 bg-paper border border-line text-ink placeholder:text-muted/70 focus:border-brand focus:outline-none transition-colors resize-y"
-          placeholder="Birthday, quiet corner, pram — tell us and we will sort it."
+          placeholder="Birthday, quiet corner, pram. Tell us and we will sort it."
         />
       </div>
 
       <div className="sm:col-span-2 flex flex-wrap items-center gap-4">
         <button
           type="submit"
-          className="inline-flex items-center justify-center h-12 px-8 rounded-full bg-brand text-cream font-medium tracking-wide hover:bg-brand-deep transition-colors"
+          className="inline-flex items-center justify-center h-12 px-8 rounded-[6px] bg-brand text-cream font-medium tracking-wide hover:bg-brand-deep transition-colors"
         >
           Request the table
         </button>

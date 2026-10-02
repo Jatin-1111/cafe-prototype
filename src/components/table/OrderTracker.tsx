@@ -26,6 +26,7 @@ import type { OrderStatus } from "@/lib/orderTypes";
 import { ArcadeRule } from "@/components/ArcadeRule";
 import { FauxQR } from "@/components/FauxQR";
 import { Sheet } from "@/components/table/Sheet";
+import { MinusIcon, PlusIcon } from "@/components/Icon";
 
 /**
  * Buzzes and marks the tab the moment an order is ready. A guest's phone is
@@ -43,7 +44,7 @@ function useReadyAlert(status: OrderStatus | undefined) {
     navigator.vibrate?.([180, 90, 180]);
 
     const original = document.title;
-    document.title = "● Ready — your order";
+    document.title = "Ready to collect";
     const restore = () => {
       if (document.visibilityState === "visible") document.title = original;
     };
@@ -75,10 +76,10 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
         <Shell table={table}>
           <div className="animate-pulse" aria-hidden>
             <div className="px-4 pt-8 pb-6 text-center border-b border-line">
-              <div className="mx-auto h-3 w-24 rounded-full bg-sand-deep" />
-              <div className="mx-auto mt-4 h-8 w-40 rounded-full bg-sand-deep" />
-              <div className="mx-auto mt-4 h-3 w-56 rounded-full bg-sand" />
-              <div className="mx-auto mt-5 h-8 w-44 rounded-full bg-sand" />
+              <div className="mx-auto h-3 w-24 rounded-[6px] bg-sand-deep" />
+              <div className="mx-auto mt-4 h-8 w-40 rounded-[6px] bg-sand-deep" />
+              <div className="mx-auto mt-4 h-3 w-56 rounded-[6px] bg-sand" />
+              <div className="mx-auto mt-5 h-8 w-44 rounded-[6px] bg-sand" />
             </div>
             <div className="grid grid-cols-4 gap-px bg-line border-b border-line">
               {[0, 1, 2, 3].map((i) => (
@@ -88,8 +89,8 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
             <div className="px-4">
               {[0, 1].map((i) => (
                 <div key={i} className="flex gap-3 py-4 border-b border-line">
-                  <div className="h-3 w-7 rounded-full bg-sand-deep" />
-                  <div className="h-3 flex-1 rounded-full bg-sand" />
+                  <div className="h-3 w-7 rounded-[6px] bg-sand-deep" />
+                  <div className="h-3 flex-1 rounded-[6px] bg-sand" />
                 </div>
               ))}
             </div>
@@ -114,7 +115,7 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
           </p>
           <Link
             href={`/t/${table}`}
-            className="mt-8 inline-flex items-center h-12 px-8 rounded-full bg-ink text-cream text-xs font-semibold uppercase tracking-[0.14em] hover:bg-brand transition-colors"
+            className="mt-8 inline-flex items-center h-12 px-8 rounded-[6px] bg-ink text-cream text-xs font-semibold uppercase tracking-[0.14em] hover:bg-brand transition-colors"
           >
             Back to the menu
           </Link>
@@ -142,7 +143,7 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
           </p>
           <Link
             href={`/t/${table}`}
-            className="mt-8 inline-flex items-center h-12 px-8 rounded-full bg-ink text-cream text-xs font-semibold uppercase tracking-[0.14em] hover:bg-brand transition-colors"
+            className="mt-8 inline-flex items-center h-12 px-8 rounded-[6px] bg-ink text-cream text-xs font-semibold uppercase tracking-[0.14em] hover:bg-brand transition-colors"
           >
             Order again
           </Link>
@@ -181,7 +182,7 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
           {current.copy}
         </p>
         {eta ? (
-          <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-brand/35 bg-brand/5 px-4 py-1.5">
+          <p className="mt-5 inline-flex items-center gap-2 rounded-[6px] border border-brand/35 bg-brand/5 px-4 py-1.5">
             <span className="text-sm font-semibold text-brand">{eta}</span>
             {order.readyBy ? (
               <span className="tnum text-xs text-muted">· by {clockTime(order.readyBy)}</span>
@@ -240,14 +241,14 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
           <div className="mt-4 pt-4 border-t border-line flex items-center justify-between gap-3">
             <span className="eyebrow">Split</span>
             <span className="flex items-center gap-3">
-              <span className="flex items-center rounded-full border border-line overflow-hidden">
+              <span className="flex items-center rounded-[6px] border border-line overflow-hidden">
                 <button
                   type="button"
                   aria-label="Fewer people"
                   onClick={() => setWays((n) => Math.max(1, n - 1))}
                   className="w-8 h-8 grid place-items-center hover:bg-sand"
                 >
-                  –
+                  <MinusIcon className="w-3.5 h-3.5" />
                 </button>
                 <span className="tnum w-8 text-center text-sm font-bold">{ways}</span>
                 <button
@@ -256,11 +257,11 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
                   onClick={() => setWays((n) => Math.min(12, n + 1))}
                   className="w-8 h-8 grid place-items-center hover:bg-sand"
                 >
-                  +
+                  <PlusIcon className="w-3.5 h-3.5" />
                 </button>
               </span>
               <span className="tnum text-sm font-semibold text-brand">
-                {ways === 1 ? "—" : `${formatINR(splitEvenly(order.total, ways)[1])} each`}
+                {ways === 1 ? "·" : `${formatINR(splitEvenly(order.total, ways)[1])} each`}
               </span>
             </span>
           </div>
@@ -283,7 +284,7 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
               <p className="eyebrow text-brand">Bill on its way</p>
               <p className="mt-2 text-sm text-ink-2 leading-relaxed max-w-[34ch] mx-auto">
                 {takeaway
-                  ? "Bring it to the till — card and cash both work."
+                  ? "Bring it to the till. Card and cash both work."
                   : "Someone is bringing it over. Card and cash both work at the table."}
               </p>
               <button
@@ -325,7 +326,7 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
               type="button"
               onClick={async () => {
                 const ok = await cancelOrder(order.id);
-                if (!ok) setCancelNote("Too late — the kitchen has it. Ask the counter.");
+                if (!ok) setCancelNote("Too late. The kitchen has it, so ask the counter.");
               }}
               className="text-xs font-semibold uppercase tracking-[0.12em] text-wine underline underline-offset-4 hover:text-ink transition-colors"
             >
@@ -343,7 +344,7 @@ export function OrderTracker({ table, id }: { table: string; id: string }) {
 
         <Link
           href={`/t/${table}`}
-          className="mt-6 w-full inline-flex items-center justify-center h-12 rounded-full border border-line text-xs font-semibold uppercase tracking-[0.14em] text-ink-2 hover:border-ink hover:text-ink transition-colors"
+          className="mt-6 w-full inline-flex items-center justify-center h-12 rounded-[6px] border border-line text-xs font-semibold uppercase tracking-[0.14em] text-ink-2 hover:border-ink hover:text-ink transition-colors"
         >
           Order something else
         </Link>
@@ -416,7 +417,7 @@ function PaySheet({
         <p className="mt-4 eyebrow">{cafe.fullName}</p>
         <p className="mt-1 tnum font-display text-3xl">{formatINR(order.total)}</p>
         <p className="mt-4 text-xs text-muted max-w-[32ch] mx-auto leading-relaxed">
-          Scan with any UPI app. In this prototype nothing is charged — the button below just
+          Scan with any UPI app. In this prototype nothing is charged. The button below just
           marks the order settled.
         </p>
       </div>
@@ -494,7 +495,7 @@ function Receipt({ order }: { order: Order }) {
         <dl className="grid grid-cols-2 gap-y-2 text-xs">
           <dt className="text-muted">Method</dt>
           <dd className="text-right font-semibold">
-            {order.paymentMethod ? PAYMENT_LABEL[order.paymentMethod] : "—"}
+            {order.paymentMethod ? PAYMENT_LABEL[order.paymentMethod] : "·"}
           </dd>
           <dt className="text-muted">Settled</dt>
           <dd className="tnum text-right">
@@ -514,7 +515,7 @@ function Receipt({ order }: { order: Order }) {
         </div>
         <Link
           href={`/t/${order.table}`}
-          className="mt-4 w-full inline-flex items-center justify-center h-12 rounded-full border border-ink/30 text-xs font-semibold uppercase tracking-[0.14em] hover:bg-ink hover:text-cream hover:border-ink transition-colors"
+          className="mt-4 w-full inline-flex items-center justify-center h-12 rounded-[6px] border border-ink/30 text-xs font-semibold uppercase tracking-[0.14em] hover:bg-ink hover:text-cream hover:border-ink transition-colors"
         >
           Start a new order
         </Link>
@@ -530,7 +531,7 @@ function Shell({ table, children }: { table: string; children: React.ReactNode }
       <div className="w-full max-w-md mx-auto flex-1 bg-paper border-x border-line min-h-dvh">
         <ArcadeRule size={20} />
         <div className="px-4 pt-3 flex items-center justify-between">
-          <span className="inline-flex items-center h-6 px-3 rounded-full bg-brand text-cream text-xs font-semibold uppercase tracking-[0.12em]">
+          <span className="inline-flex items-center h-6 px-3 rounded-[6px] bg-brand text-cream text-xs font-semibold uppercase tracking-[0.12em]">
             {label}
           </span>
           <Link href="/" className="wordmark text-sm leading-none">

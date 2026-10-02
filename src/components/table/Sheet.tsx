@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef } from "react";
+import { CloseIcon } from "@/components/Icon";
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -10,7 +11,7 @@ const FOCUSABLE =
  *
  * A real dialog: it takes focus on open, keeps Tab inside itself, closes on
  * Escape, and hands focus back to whatever opened it. Without that, a keyboard
- * or screen-reader user who opens the options sheet is stranded behind it —
+ * or screen-reader user who opens the options sheet is stranded behind it ,
  * the page underneath is still there, still tabbable, and silent.
  */
 export function Sheet({
@@ -106,7 +107,7 @@ export function Sheet({
             onClick={onClose}
             className="shrink-0 w-8 h-8 grid place-items-center border border-line text-ink hover:bg-ink hover:text-sand transition-colors"
           >
-            <span aria-hidden>✕</span>
+            <CloseIcon />
             <span className="sr-only">Close</span>
           </button>
         </div>

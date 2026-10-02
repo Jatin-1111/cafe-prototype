@@ -24,6 +24,6 @@ export function rememberGuest(guest: RememberedGuest): void {
   try {
     localStorage.setItem(KEY, JSON.stringify(guest));
   } catch {
-    /* private mode — they will simply type it again */
+    /* private mode: they will simply type it again */
   }
 }

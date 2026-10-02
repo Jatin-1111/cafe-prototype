@@ -57,7 +57,7 @@ export function setSoundEnabled(on: boolean): void {
   for (const listener of listeners) listener();
 }
 
-/** Two short notes — audible across a counter, not alarming in a quiet room. */
+/** Two short notes: audible across a counter, not alarming in a quiet room. */
 export function playNewTicketChime(): void {
   if (!soundEnabled()) return;
   const ctx = ensureContext();

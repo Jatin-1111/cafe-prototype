@@ -19,11 +19,11 @@ const jost = Jost({
 
 export const metadata: Metadata = {
   title: {
-    default: `${cafe.fullName} — ${cafe.city}`,
+    default: `${cafe.fullName}, ${cafe.city}`,
     template: `%s · ${cafe.name}`,
   },
   description:
-    "Tasteful food, chilled drinks and vibes that calm the mind — a cosy corner for every craving, on the first floor in Sector 35C, Chandigarh.",
+    "Pizza, pasta, Chinese and coffee on the first floor in Sector 35C, Chandigarh. Open every day, 11am to 11pm.",
 };
 
 export const viewport: Viewport = {

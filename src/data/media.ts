@@ -1,5 +1,5 @@
 /* ============================================================
-   Photography manifest — Refections Cafe
+   Photography manifest: Refections Cafe
    ------------------------------------------------------------
    One entry per shot the site expects. Save the file into
    /public/photos under the `file` name below, flip `ready` to true,
@@ -29,67 +29,17 @@ export type Shot = {
   blur?: string;
   /** Shown on the placeholder plate so a reviewer knows what belongs here. */
   caption: string;
-  prompt: string;
+  /** What to point a camera at, for whoever reshoots this. */
+  brief: string;
 };
 
 /* ------------------------------------------------------------
-   Every slot below is filled with one of the cafe's own published
-   photographs, cropped to the slot. The prompts are kept only as a
-   brief for re-shooting or for skinning this app to another cafe.
+   Every slot is filled with one of the cafe's own photographs.
+   Nothing here is generated, and nothing should be: a made-up
+   picture of a real room is the one thing a client will spot
+   instantly. The `brief` on each entry says what to point a
+   camera at when these are reshot properly.
    ------------------------------------------------------------ */
-
-/**
- * Appended to every prompt. Identical wording across a set is what makes
- * separate generations read as one shoot by one photographer.
- */
-export const HOUSE_STYLE =
-  "TECHNICAL: Full-frame camera, fast prime, bright airy editorial finish. Soft natural daylight " +
-  "with warm tungsten mixed in, gentle contrast, highlights allowed to bloom slightly. " +
-  "Clean colour, lightly lifted blacks, no heavy grain, no HDR, no harsh flash. " +
-  "PALETTE: the frame should sit in terracotta (#BC5228), jade green (#1F6B56), blush rose " +
-  "(#DFA7A2), warm sand plaster (#F1E2D0) and brass (#C08A4A). Warm throughout, nothing cold, " +
-  "nothing grey. " +
-  "EXCLUDE: no text of any kind, no lettering, no signage copy, no menu boards with words, " +
-  "no brand logos, no watermarks, no visible faces, no posed models, no chalkboard art, " +
-  "no exposed-filament Edison bulbs, no dark moody grading, no cold blue shadows.";
-
-/** Repeated in all four dish prompts so the row of squares matches. */
-const DISH_SET =
-  "SET (identical across every dish shot): the same white marble café table with soft grey " +
-  "veining and a thin brass edge. The same soft daylight entering from camera-left at roughly 30 " +
-  "degrees, late morning, with a warm bounce filling the shadows. Same camera height: 40 degrees " +
-  "above the table, not flat overhead. Same 50mm equivalent at f/2.8, focus on the front edge of " +
-  "the food, background falling away softly. Background: a blurred suggestion of warm sand " +
-  "plaster wall and the cane back of a chair, occupying the top fifth of the frame only. Food " +
-  "fills roughly 60% of the frame, centred, with breathing room on all four sides so a square " +
-  "crop never clips it.";
-
-const ROOM_PROMPT =
-  "Wide editorial interior of a first-floor Chandigarh cafe: capsule-arched windows, taupe " +
-  "button-tufted booths, rattan pendant lamps, a terracotta geometric mural, and arched niches " +
-  "lined with sage-and-blush botanical wallpaper. Empty of people, soft daylight. Keep the top and " +
-  "bottom eighth free of anything essential — the layout crops this to a wide band. " +
-  HOUSE_STYLE;
-
-const COUNTER_PROMPT =
-  "The back wall of the cafe counter: a row of soft organic arch niches cut into warm sand " +
-  "plaster, painted deep terracotta inside and warmly backlit, each holding stemmed glassware on a " +
-  "brass shelf. A dark fluted-tile bar front below, brass mesh ceiling above. " +
-  HOUSE_STYLE;
-
-const ARCH_PROMPT =
-  "Vertical: a single tall arched niche in warm sand plaster, lined with sage and blush botanical " +
-  "wallpaper and holding a brass-framed arched mirror, above a dusty rose velvet banquette with " +
-  "cane-backed teak chairs and a white marble table. " +
-  HOUSE_STYLE;
-
-const TABLES_PROMPT =
-  "A row of white marble cafe tables with brass edges and blush floral upholstered chairs, " +
-  "standing on speckled terrazzo, with a curved jade-green velvet banquette and potted palms " +
-  "beyond. Soft daylight, empty of people. " +
-  HOUSE_STYLE;
-
-const DISH_PROMPT = DISH_SET + " " + HOUSE_STYLE;
 
 export const shots = {
   room: {
@@ -97,11 +47,12 @@ export const shots = {
     file: "room.jpg",
     blur: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABUOEBIQDRUSERIYFhUZHzQiHx0dH0AuMCY0TENQT0tDSUhUXnlmVFlyWkhJaY9qcnyAh4iHUWWUn5ODnXmEh4L/2wBDARYYGB8cHz4iIj6CVklWgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoL/wAARCAAHAAwDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDSu72MzOEUnpz0BrIf7S7kjAH86KKzaVzVbH//2Q==",
     ready: true,
-    alt: "The main room — capsule windows, tufted booths, rattan pendants and a terracotta mural on the far wall",
+    alt: "The main room: capsule windows, tufted booths, rattan pendants and a terracotta mural on the far wall",
     width: 1080,
     height: 608,
     caption: "The room · wide",
-    prompt: ROOM_PROMPT,
+    brief:
+      "Wide, from the doorway at seated eye level. The run of booths with the terracotta mural behind and the capsule window on the left. Empty of people. Keep the top and bottom eighth clear, the layout crops this to a band.",
   },
 
   counter: {
@@ -109,11 +60,12 @@ export const shots = {
     file: "counter.jpg",
     blur: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABUOEBIQDRUSERIYFhUZHzQiHx0dH0AuMCY0TENQT0tDSUhUXnlmVFlyWkhJaY9qcnyAh4iHUWWUn5ODnXmEh4L/2wBDARYYGB8cHz4iIj6CVklWgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoL/wAARCAAGAAwDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwCGG6kbaOARx060MryMWYjNFFYtWNVruf/Z",
     ready: true,
-    alt: "The counter wall — a row of backlit terracotta arch niches holding glassware above the bar",
+    alt: "The counter wall: a row of backlit terracotta arch niches holding glassware above the bar",
     width: 900,
     height: 450,
     caption: "The counter · arch niches",
-    prompt: COUNTER_PROMPT,
+    brief:
+      "Square on to the counter wall, so the row of backlit terracotta niches runs across frame. Shot wide enough that the arches, not the glassware, are the subject.",
   },
 
   arch: {
@@ -125,7 +77,8 @@ export const shots = {
     width: 576,
     height: 720,
     caption: "The arches · vertical",
-    prompt: ARCH_PROMPT,
+    brief:
+      "Vertical. One arched niche with the botanical wallpaper, the rose banquette beneath it and a cane chair in front. Daylight, no flash.",
   },
 
   tables: {
@@ -137,7 +90,8 @@ export const shots = {
     width: 960,
     height: 720,
     caption: "The tables · terrazzo",
-    prompt: TABLES_PROMPT,
+    brief:
+      "The marble tables on the terrazzo with the floral chairs, jade banquette visible beyond. Waist height, slight angle, late morning.",
   },
 
   /* ---------- Signature dishes, square crops ---------- */
@@ -151,7 +105,8 @@ export const shots = {
     width: 720,
     height: 720,
     caption: "Farmhouse Pizza",
-    prompt: DISH_PROMPT,
+    brief:
+      "Whole pizza on its board, 40 degrees above the table, daylight from the left.",
   },
 
   sliders: {
@@ -163,7 +118,8 @@ export const shots = {
     width: 720,
     height: 720,
     caption: "Tricolour Sliders",
-    prompt: DISH_PROMPT,
+    brief:
+      "The slider board straight on, jade velvet behind it, 40 degrees above the table.",
   },
 
   panini: {
@@ -175,7 +131,8 @@ export const shots = {
     width: 720,
     height: 720,
     caption: "Grilled Veg Panini",
-    prompt: DISH_PROMPT,
+    brief:
+      "The panini on its board with the dip, branded tin in shot behind, 40 degrees above the table.",
   },
 
   burger: {
@@ -187,7 +144,8 @@ export const shots = {
     width: 720,
     height: 720,
     caption: "Crispy Chicken Burger",
-    prompt: DISH_PROMPT,
+    brief:
+      "The burger at 40 degrees, cut face toward camera, branded fries tin behind.",
   },
 } satisfies Record<string, Shot>;
 

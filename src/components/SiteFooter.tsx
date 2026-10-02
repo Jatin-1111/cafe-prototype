@@ -39,7 +39,7 @@ export function SiteFooter() {
                   <li key={slot.days}>
                     <span className="block">{slot.days}</span>
                     <span className="tnum text-sand/55 whitespace-nowrap">
-                      {slot.open} – {slot.close}
+                      {slot.open} to {slot.close}
                     </span>
                   </li>
                 ))}

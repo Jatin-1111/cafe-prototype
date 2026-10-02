@@ -1,6 +1,6 @@
 /**
  * A decorative QR-shaped mark. Deterministic from the seed so server and client
- * render the same squares — it is artwork, not a scannable code.
+ * render the same squares: it is artwork, not a scannable code.
  */
 export function FauxQR({
   seed = "refections",

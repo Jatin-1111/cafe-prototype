@@ -7,7 +7,7 @@ import { MongoClient, type Db } from "mongodb";
 
    One client per process, cached on globalThis so Turbopack's hot
    reload in development does not open a new connection pool on every
-   edit — Atlas will start refusing connections if it does.
+   edit: Atlas will start refusing connections if it does.
    ============================================================ */
 
 const DB_NAME = process.env.MONGODB_DB ?? "refections";

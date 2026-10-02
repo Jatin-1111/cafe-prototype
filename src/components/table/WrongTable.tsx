@@ -4,7 +4,7 @@ import { tableLabel } from "@/lib/tables";
 import { ArcadeRule } from "@/components/ArcadeRule";
 
 /**
- * Shown when a browser reaches a table it has not scanned into — a typed URL,
+ * Shown when a browser reaches a table it has not scanned into: a typed URL,
  * a shared link, a stale session. Deliberately not a dead end: the demo needs
  * a way back, and a real guest needs to know what to do next.
  */
@@ -14,7 +14,7 @@ export function WrongTable({ table, boundTo }: { table: string; boundTo?: string
       <div className="w-full max-w-md mx-auto flex-1 bg-paper border-x border-line min-h-dvh">
         <ArcadeRule size={20} />
         <div className="px-4 pt-3 flex items-center justify-between">
-          <span className="inline-flex items-center h-6 px-3 rounded-full border border-line text-muted text-xs font-semibold uppercase tracking-[0.12em]">
+          <span className="inline-flex items-center h-6 px-3 rounded-[6px] border border-line text-muted text-xs font-semibold uppercase tracking-[0.12em]">
             Not scanned in
           </span>
           <Link href="/" className="wordmark text-sm leading-none">
@@ -40,7 +40,7 @@ export function WrongTable({ table, boundTo }: { table: string; boundTo?: string
           {boundTo ? (
             <Link
               href={`/t/${boundTo}`}
-              className="mt-8 inline-flex items-center h-12 px-8 rounded-full bg-ink text-cream text-xs font-semibold uppercase tracking-[0.14em] hover:bg-brand transition-colors"
+              className="mt-8 inline-flex items-center h-12 px-8 rounded-[6px] bg-ink text-cream text-xs font-semibold uppercase tracking-[0.14em] hover:bg-brand transition-colors"
             >
               Back to {tableLabel(boundTo).toLowerCase()}
             </Link>
@@ -53,7 +53,7 @@ export function WrongTable({ table, boundTo }: { table: string; boundTo?: string
             </p>
             <Link
               href="/demo"
-              className="mt-4 inline-flex items-center h-11 px-6 rounded-full border border-ink/30 text-xs font-semibold uppercase tracking-[0.14em] hover:bg-ink hover:text-cream hover:border-ink transition-colors"
+              className="mt-4 inline-flex items-center h-11 px-6 rounded-[6px] border border-ink/30 text-xs font-semibold uppercase tracking-[0.14em] hover:bg-ink hover:text-cream hover:border-ink transition-colors"
             >
               Open the demo hub
             </Link>

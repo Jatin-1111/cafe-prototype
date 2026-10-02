@@ -3,7 +3,7 @@
  *
  * Address, phone, hours and positioning are taken from the cafe's own public
  * listings. The longer `story` copy is placeholder written from the room's
- * published photographs — it is for the owners to replace with their own
+ * published photographs: it is for the owners to replace with their own
  * words before this goes anywhere real.
  */
 export const cafe = {
@@ -28,7 +28,7 @@ export const cafe = {
     body: [
       "A first-floor room off the Sector 35 market, built around a row of arches. Terracotta niches behind the counter, plaster walls the colour of warm sand, and a curved jade banquette that most people photograph before they sit down.",
       "Blush florals on the chairs, speckled terrazzo underfoot, brass mesh overhead and palms in every corner. The light is soft all day and gold by evening, which is roughly when the room fills up.",
-      "The menu runs wide on purpose — wood-fired pizza and creamy pasta alongside the chinese you actually want at eleven at night, and coffee that holds its own at any hour.",
+      "The menu runs wide on purpose. Pizza and creamy pasta alongside the Chinese you actually want at eleven at night, and coffee that holds its own at any hour.",
     ],
   },
 

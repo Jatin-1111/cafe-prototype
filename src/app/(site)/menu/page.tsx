@@ -47,7 +47,7 @@ export default function MenuPage() {
               <a
                 key={category.id}
                 href={`#${category.id}`}
-                className="inline-flex items-center h-10 px-5 rounded-full border border-ink/25 text-sm font-medium hover:bg-ink hover:text-cream hover:border-ink transition-colors"
+                className="inline-flex items-center h-10 px-5 rounded-[6px] border border-ink/25 text-sm font-medium hover:bg-ink hover:text-cream hover:border-ink transition-colors"
               >
                 {category.name}
                 <span className="ml-2 tnum text-xs text-muted">{itemsIn(category.id).length}</span>
@@ -85,7 +85,7 @@ export default function MenuPage() {
                       {item.tags?.map((tag) => (
                         <span
                           key={tag}
-                          className={`rounded-full text-[11px] uppercase tracking-[0.12em] font-medium px-3 py-0.5 border ${tagTone[tag]}`}
+                          className={`rounded-[6px] text-[11px] uppercase tracking-[0.12em] font-medium px-3 py-0.5 border ${tagTone[tag]}`}
                         >
                           {tagLabel[tag]}
                         </span>
@@ -121,7 +121,7 @@ export default function MenuPage() {
             </p>
             <Link
               href={scanLink("07")}
-              className="mt-6 inline-flex items-center h-12 px-8 rounded-full bg-brand text-cream font-medium tracking-wide hover:bg-brand-deep transition-colors"
+              className="mt-6 inline-flex items-center h-12 px-8 rounded-[6px] bg-brand text-cream font-medium tracking-wide hover:bg-brand-deep transition-colors"
             >
               Open table 07
             </Link>

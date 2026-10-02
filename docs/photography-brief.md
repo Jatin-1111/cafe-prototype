@@ -1,100 +1,67 @@
-# Photography brief — Refections Cafe, Sector 35C, Chandigarh
+# Photography brief: Refections Cafe
 
-Eight shots. Save each into `public/photos/` under the **exact filename** below, then flip `ready`
-to `true` on the matching entry in [`src/data/media.ts`](../src/data/media.ts). The slots already
-reserve the right aspect ratio, so nothing on the page moves when the files land.
+Eight pictures. Every slot on the site is currently filled with one of the cafe's own published
+photographs, cropped to fit. **Nothing here is AI-generated and nothing should be.** A made-up
+picture of a real room is the one thing an owner spots instantly, and once he does he stops
+trusting everything else on the page.
 
-> **Fastest route for the pitch:** ask Refections for their own photographs, or use the ones already
-> on their Instagram and delivery listings with their permission. These prompts exist so the mock
-> can be filled before that conversation happens — generated images of a real cafe's interior should
-> not be presented as photographs of it.
+This is the brief for shooting them properly, which is worth doing: the published ones were taken
+for a delivery listing, not for a website, and it shows at full width.
 
 ## Dropping a photo in
 
-```ts
-// src/data/media.ts
-room: {
-  id: "room",
-  file: "room.jpg",
-  ready: true,   // <- flip this
-```
-
-## The room these photos live in
-
-A first-floor cafe above the Sector 35 market. The defining features, all visible in their
-published photos:
-
-- **Arched plaster niches** in warm sand, painted terracotta inside and backlit
-- **Dusty rose and jade velvet** button-tufted banquettes
-- **Botanical wallpaper** — sage palm leaves with blush blooms
-- **Speckled terrazzo** on the floor and the half-wall
-- **Brass** mesh ceiling, mirror frames, table edges
-- **Cane-backed teak chairs**, white marble tables, feathered white pendants
-
-Warm and bright throughout. Nothing moody, nothing cold, nothing grey.
-
-## Two blocks to paste into every prompt
-
-Both live in `media.ts` as `HOUSE_STYLE` and `DISH_SET` so the code and the brief cannot drift.
-
-**`HOUSE_STYLE` — append to all eight:**
-
-> TECHNICAL: Full-frame camera, fast prime, bright airy editorial finish. Soft natural daylight with
-> warm tungsten mixed in, gentle contrast, highlights allowed to bloom slightly. Clean colour,
-> lightly lifted blacks, no heavy grain, no HDR, no harsh flash.
-> PALETTE: the frame should sit in terracotta (#BC5228), jade green (#1F6B56), blush rose (#DFA7A2),
-> warm sand plaster (#F1E2D0) and brass (#C08A4A). Warm throughout, nothing cold, nothing grey.
-> EXCLUDE: no text of any kind, no lettering, no signage copy, no menu boards with words, no brand
-> logos, no watermarks, no visible faces, no posed models, no chalkboard art, no exposed-filament
-> Edison bulbs, no dark moody grading, no cold blue shadows.
-
-**`DISH_SET` — append to the four dish shots as well:**
-
-> SET (identical across every dish shot): the same white marble café table with soft grey veining
-> and a thin brass edge. The same soft daylight entering from camera-left at roughly 30 degrees,
-> late morning, with a warm bounce filling the shadows. Same camera height: 40 degrees above the
-> table, not flat overhead. Same 50mm equivalent at f/2.8, focus on the front edge of the food,
-> background falling away softly. Background: a blurred suggestion of warm sand plaster wall and the
-> cane back of a chair, occupying the top fifth of the frame only. Food fills roughly 60% of the
-> frame, centred, with breathing room on all four sides so a square crop never clips it.
-
-The four dish squares sit **side by side in one row**, so they must match each other far more
-tightly than anything else. Generate all four in a single conversation, in order, telling the model
-to keep the table, light direction and camera height identical to the previous image.
+Save it into `public/photos/` under the filename below, keep the aspect ratio, and set `ready: true`
+on the matching entry in [`src/data/media.ts`](../src/data/media.ts). Each entry also carries a
+`brief` field saying what to point the camera at, so the shot list and the code cannot drift apart.
 
 ## The shots
 
-| # | Filename | Size | Ratio | Where it appears |
+| # | File | Size | Ratio | Where it lands |
 |---|---|---|---|---|
 | 1 | `room.jpg` | 2400 × 1350 | 16:9 | Full-width band under the home hero |
-| 2 | `counter.jpg` | 1800 × 1200 | 3:2 | Story section, left column |
-| 3 | `booth.jpg` | 1200 × 1500 | 4:5 | Visit section, above the hours |
-| 4 | `marble-code.jpg` | 1600 × 1200 | 4:3 | Menu page, table-ordering panel |
-| 5 | `cold-coffee.jpg` | 1200 × 1200 | 1:1 | Signatures row |
-| 6 | `peri-fries.jpg` | 1200 × 1200 | 1:1 | Signatures row |
-| 7 | `margherita.jpg` | 1200 × 1200 | 1:1 | Signatures row |
-| 8 | `brownie.jpg` | 1200 × 1200 | 1:1 | Signatures row |
+| 2 | `counter.jpg` | 1800 × 900 | 2:1 | Story section |
+| 3 | `arch.jpg` | 1200 × 1500 | 4:5 | Visit section |
+| 4 | `tables.jpg` | 1600 × 1200 | 4:3 | Menu page panel |
+| 5 | `pizza.jpg` | 1200 × 1200 | 1:1 | Signatures row |
+| 6 | `sliders.jpg` | 1200 × 1200 | 1:1 | Signatures row |
+| 7 | `panini.jpg` | 1200 × 1200 | 1:1 | Signatures row |
+| 8 | `burger.jpg` | 1200 × 1200 | 1:1 | Signatures row |
 
-The full prompt for each sits on its entry in [`media.ts`](../src/data/media.ts) — that is the
-single source, so they cannot fall out of step with the slots they fill.
+**1. The room.** Wide, from the doorway at seated eye level. The run of booths with the terracotta
+mural behind and the capsule window on the left. Empty of people. Keep the top and bottom eighth
+clear of anything important: the layout crops this to roughly 3:1 on a laptop.
 
-**Two crops worth knowing about.** The room band renders roughly **3:1 on a laptop**, so the top and
-bottom eighth of a 16:9 file is cut — keep anything important in the middle band. Shots 1–3 and 5–8
-are rendered in **arch-topped frames**, matching the niches in the room, so the top corners of every
-one of those images is masked away. Nothing essential should sit in the upper corners.
+**2. The counter.** Square on to the wall so the row of backlit terracotta niches runs across the
+frame. Wide enough that the arches are the subject, not the glassware. The frame is arch-masked at
+the top, so leave headroom.
 
-## Before you commit them
+**3. The arch.** Vertical. One niche with the botanical wallpaper, the rose banquette under it, a
+cane chair in front.
 
-- **Compress.** Under 300 KB each. `squoosh.app`, or `npx @squoosh/cli --mozjpeg auto public/photos/*.jpg`.
-  Prefer JPEG or WebP over PNG — a photograph saved as PNG is roughly five times larger for no visible gain.
-- **Reject any readable text.** The signboard, the cups, the menu cards. A hallucinated word in a
-  photo of a real cafe is the kind of detail that loses a room's trust.
-- **Reject faces.** A recognisable invented person in a client demo raises questions you do not want
-  to answer in a pitch meeting.
+**4. The tables.** The marble tops on the terrazzo with the floral chairs, jade banquette beyond.
+Waist height, slight angle.
+
+**5–8. The four dishes.** These sit side by side in one row, so they have to match each other more
+than anything else here. Same table, same light from the same side, same camera height (about 40
+degrees above the tabletop, not flat overhead), shot in one sitting. The frames are arch-masked, so
+nothing important in the top corners.
+
+## Practical notes
+
+- **Late morning, by the windows, no flash.** The room is lit for the camera already; a flash kills
+  the warmth that makes it look like itself.
+- **Compress before committing.** Under 300 KB each. JPEG, not PNG: a photograph saved as PNG is
+  roughly five times the size for no visible gain.
+- **Regenerate the blur placeholders** after replacing a file. Each entry carries a twelve-pixel
+  inline version so a slot is never blank while the real file loads.
+- **No stock.** If a shot cannot be taken, leave the slot empty rather than filling it with a
+  stand-in. The placeholder states plainly that a photograph is pending, which is honest; a stock
+  photo of someone else's cafe is not.
 
 ## If you re-skin this for another cafe
 
-Everything brand-specific lives in four files: [`globals.css`](../src/app/globals.css) (palette,
-type, shape, motifs), [`cafe.ts`](../src/data/cafe.ts) (name, address, hours, story),
-[`menu.ts`](../src/data/menu.ts) and this manifest. Nothing in the ordering flow, the counter board
-or the table-code security knows which cafe it is serving.
+Everything cafe-specific lives in four files: [`globals.css`](../src/app/globals.css) (palette,
+type, shape), [`cafe.ts`](../src/data/cafe.ts) (name, address, hours, the rating and its source),
+[`menu.ts`](../src/data/menu.ts) and this manifest. Note that `menu.ts` is now the source of truth
+for money, not display copy: the server prices every order from it, so a wrong price there is a
+wrong price charged.

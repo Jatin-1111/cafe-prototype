@@ -94,7 +94,7 @@ export type OrderLine = {
   base?: number;
   qty: number;
   options?: Record<string, string>;
-  /** A note on this line alone — "no onion in the burger" without touching the pizza. */
+  /** A note on this line alone: "no onion in the burger" without touching the pizza. */
   note?: string;
 };
 
@@ -112,7 +112,7 @@ export type Order = {
   placedAt: number;
   updatedAt: number;
   note?: string;
-  /** Guest tapped "ask for the bill" — the counter sees it flagged. */
+  /** Guest tapped "ask for the bill": the counter sees it flagged. */
   billRequested?: boolean;
   paidAt?: number;
   paymentMethod?: PaymentMethod;
@@ -121,7 +121,7 @@ export type Order = {
   /** Added for takeaway packing, applied once per order. */
   packing?: number;
   /**
-   * The guest said they have paid by UPI. The counter still confirms it —
+   * The guest said they have paid by UPI. The counter still confirms it ,
    * there is no gateway here, and a tap that closes a bill on its own is a
    * hole a cafe would notice on day one.
    */
@@ -145,7 +145,7 @@ export function canCancel(order: Order, now: number): boolean {
 }
 
 /**
- * Wording for the wait. Deliberately vague near the end — a countdown that
+ * Wording for the wait. Deliberately vague near the end: a countdown that
  * hits zero and keeps going is worse than no countdown at all.
  */
 export function etaCopy(order: Order, now: number): string | null {
@@ -159,7 +159,7 @@ export function etaCopy(order: Order, now: number): string | null {
   return `About ${minutes} minutes`;
 }
 
-/** GST is baked into the shelf price — the receipt shows what was included. */
+/** GST is baked into the shelf price: the receipt shows what was included. */
 export const GST_RATE = 0.05;
 
 export function taxBreakdown(total: number) {
@@ -211,7 +211,7 @@ export function countsAsTakings(order: Order): boolean {
 }
 
 /**
- * A cafe's day does not end at midnight — this one closes at 11:30pm and the
+ * A cafe's day does not end at midnight: this one closes at 11:30pm and the
  * last tickets land after that. Everything from 5am counts as one service day,
  * so "taken today" still reads correctly at closing time.
  */

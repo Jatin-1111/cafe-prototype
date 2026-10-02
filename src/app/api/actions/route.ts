@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     switch (action.type) {
       case "place": {
         // Placing an order onto a table requires having scanned that table's
-        // code — the same rule the page guard enforces, re-checked here so the
+        // code: the same rule the page guard enforces, re-checked here so the
         // endpoint cannot be used to order onto someone else's bill.
         const bound = (await cookies()).get(TABLE_COOKIE)?.value;
         if (!isKnownTable(action.table) || !sessionOwnsTable(bound, action.table)) {
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
         });
         if (!order) {
           return NextResponse.json(
-            { error: "Nothing left to order — those items just came off the board." },
+            { error: "Nothing left to order. Those items just came off the board." },
             { status: 409 },
           );
         }

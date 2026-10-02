@@ -14,7 +14,7 @@ import {
    The browser's view of the order state.
 
    Orders and the sold-out list live in MongoDB and are reached
-   through /api — so a guest's phone and the counter laptop are
+   through /api: so a guest's phone and the counter laptop are
    genuinely looking at the same data, which localStorage alone
    could never do.
 
@@ -44,7 +44,7 @@ const POLL_MS = 2500;
  * A backgrounded tab still polls, just slowly. The guest's phone is locked in
  * their pocket exactly when their order becomes ready, so a store that stops
  * listening while hidden can never tell them. Mobile browsers throttle
- * background timers hard, so this is a best effort, not a guarantee — real
+ * background timers hard, so this is a best effort, not a guarantee: real
  * push would need a service worker.
  */
 const POLL_HIDDEN_MS = 10000;
@@ -84,7 +84,7 @@ function setState(next: Snapshot) {
 }
 
 /* ------------------------------------------------------------
-   Cart — local to this device
+   Cart: local to this device
    ------------------------------------------------------------ */
 
 function readCarts(): Carts {
@@ -100,7 +100,7 @@ function writeCarts(carts: Carts, broadcast = true) {
   try {
     localStorage.setItem(CART_KEY, JSON.stringify(carts));
   } catch {
-    /* private mode or full storage — the cart still works in memory */
+    /* private mode or full storage: the cart still works in memory */
   }
   if (broadcast) channel?.postMessage("carts");
 }
@@ -233,7 +233,7 @@ export function getServerSnapshot(): Snapshot {
 }
 
 /* ------------------------------------------------------------
-   Cart actions — instant, local
+   Cart actions: instant, local
    ------------------------------------------------------------ */
 
 function sameLine(a: OrderLine, b: OrderLine) {
@@ -293,7 +293,7 @@ export function clearCart(table: string) {
 }
 
 /* ------------------------------------------------------------
-   Order actions — these go to the server
+   Order actions: these go to the server
    ------------------------------------------------------------ */
 
 export async function placeOrder(
@@ -345,7 +345,7 @@ export async function setOrderStatus(id: string, status: OrderStatus): Promise<O
   return send({ type: "status", id, status, from });
 }
 
-/** The counter pulling a ticket. Not optimistic — the server decides if it still can be. */
+/** The counter pulling a ticket. Not optimistic: the server decides if it still can be. */
 export async function voidOrder(id: string): Promise<Outcome> {
   return send({ type: "void", id });
 }

@@ -88,7 +88,7 @@ const noopSubscribe = () => () => {};
 const alwaysTrue = () => true;
 const alwaysFalse = () => false;
 
-/** True only after hydration — used to avoid rendering storage-backed UI on the server. */
+/** True only after hydration: used to avoid rendering storage-backed UI on the server. */
 export function useMounted(): boolean {
   return useSyncExternalStore(noopSubscribe, alwaysTrue, alwaysFalse);
 }

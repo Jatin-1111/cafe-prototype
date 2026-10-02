@@ -4,6 +4,7 @@ import { formatINR, menu, signatures } from "@/data/menu";
 import { shots } from "@/data/media";
 import { scanLink } from "@/lib/tableAuth";
 import { Photo } from "@/components/Photo";
+import { StarIcon } from "@/components/Icon";
 import { FauxQR } from "@/components/FauxQR";
 import { ReserveForm } from "@/components/ReserveForm";
 
@@ -50,28 +51,30 @@ export default function HomePage() {
                 </span>
               </p>
 
-              <h1 className="mt-7 font-display text-[clamp(2.5rem,6vw,4rem)] leading-[1.05] text-ink text-balance max-w-[11ch] sm:max-w-none">
-                A cosy corner{" "}
-                <span className="italic text-brand">for every craving</span>
+              {/* States what you get and where. The cafe's own line, "a cosy
+                  corner for every craving", sits below as the tagline it is. */}
+              <h1 className="mt-7 font-display text-[clamp(2.5rem,6vw,4rem)] leading-[1.05] text-ink text-balance">
+                Pizza, pasta and coffee,{" "}
+                <span className="italic text-brand">one floor above Sector 35</span>
               </h1>
 
               <div className="mt-8 max-w-[46ch]">
                 <p className="text-lg text-ink-2 leading-relaxed">
-                  {cafe.story.lead} Arched niches, jade velvet and speckled terrazzo, one
-                  floor above the Sector 35 market.
+                  {cafe.tagline}. Arched niches, jade velvet and speckled terrazzo, open
+                  every day from {cafe.hours[0].open} to {cafe.hours[0].close}.
                 </p>
               </div>
 
               <div className="mt-9 flex flex-wrap gap-3">
                 <Link
                   href="/menu"
-                  className="inline-flex items-center h-12 px-8 rounded-full bg-brand text-cream font-medium tracking-wide hover:bg-brand-deep transition-colors"
+                  className="inline-flex items-center h-12 px-8 rounded-[6px] bg-brand text-cream font-medium tracking-wide hover:bg-brand-deep transition-colors"
                 >
                   See the menu
                 </Link>
                 <Link
                   href="/#reserve"
-                  className="inline-flex items-center h-12 px-8 rounded-full border border-ink/25 text-ink font-medium tracking-wide hover:border-ink hover:bg-ink hover:text-cream transition-colors"
+                  className="inline-flex items-center h-12 px-8 rounded-[6px] border border-ink/25 text-ink font-medium tracking-wide hover:border-ink hover:bg-ink hover:text-cream transition-colors"
                 >
                   Reserve a table
                 </Link>
@@ -81,10 +84,8 @@ export default function HomePage() {
                 {cafe.acclaim.rating ? (
                   <span className="inline-flex items-center gap-2">
                     {/* One star, not five: a row of five filled stars beside a
-                        4.3 is the kind of small dishonesty people notice. */}
-                    <span aria-hidden className="text-brand text-base leading-none">
-                      ★
-                    </span>
+                        4.4 is the kind of small dishonesty people notice. */}
+                    <StarIcon className="w-4 h-4 text-brand" />
                     <span className="tnum font-medium text-ink">{cafe.acclaim.rating}</span>
                     <span className="text-muted">
                       from {cafe.acclaim.reviews.toLocaleString("en-IN")} reviews on{" "}
@@ -93,12 +94,12 @@ export default function HomePage() {
                   </span>
                 ) : null}
                 <span className="text-muted">
-                  Open today {cafe.hours[0].open} – {cafe.hours[0].close}
+                  Open today {cafe.hours[0].open} to {cafe.hours[0].close}
                 </span>
               </div>
             </div>
 
-            {/* Counter price board — the thing hanging behind the till in every old cafe */}
+            {/* Counter price board: the thing hanging behind the till in every old cafe */}
             <div className="lg:justify-self-end w-full max-w-sm">
               <div className="arch-top bg-brand text-cream shadow-[0_28px_70px_-30px] shadow-brand/70">
                 <div className="px-7 pt-14 pb-5 text-center">
@@ -199,7 +200,7 @@ export default function HomePage() {
               href="/menu"
               className="text-sm font-semibold text-brand hover:text-ink transition-colors underline underline-offset-4"
             >
-              Full menu — {menu.length} items
+              Full menu, {menu.length} items
             </Link>
           </div>
 
@@ -253,9 +254,9 @@ export default function HomePage() {
 
               <Link
                 href={scanLink("07")}
-                className="mt-10 inline-flex items-center h-12 px-8 rounded-full bg-brass text-ink font-medium tracking-wide hover:bg-brass-soft transition-colors"
+                className="mt-10 inline-flex items-center h-12 px-8 rounded-[6px] bg-brass text-ink font-medium tracking-wide hover:bg-brass-soft transition-colors"
               >
-                Try it — table 07
+                Try it on table 07
               </Link>
             </div>
 
@@ -265,7 +266,7 @@ export default function HomePage() {
                 <p className="mt-4 text-center eyebrow text-ink">Table 07</p>
               </div>
               <p className="mt-4 text-center text-xs text-sand/45 max-w-[26ch] mx-auto">
-                Decorative in the prototype — the demo link opens the same screen.
+                Decorative in the prototype. The demo link opens the same screen.
               </p>
             </div>
           </div>
@@ -318,7 +319,7 @@ export default function HomePage() {
                         {slot.days}
                       </th>
                       <td className="py-4 text-right tnum text-ink-2">
-                        {slot.open} — {slot.close}
+                        {slot.open} to {slot.close}
                       </td>
                     </tr>
                   ))}

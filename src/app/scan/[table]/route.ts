@@ -7,7 +7,7 @@ import { TABLE_COOKIE, TABLE_COOKIE_MAX_AGE, verifyTableKey } from "@/lib/tableA
  * browser to that table with an httpOnly cookie and hands over to the menu.
  *
  * Every failure hands over to /t/[table] without a cookie, and that page
- * decides what the guest sees — an unknown table 404s, a known table without
+ * decides what the guest sees: an unknown table 404s, a known table without
  * a valid code gets the "scan the code on your table" screen.
  */
 export async function GET(request: NextRequest, ctx: RouteContext<"/scan/[table]">) {

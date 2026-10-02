@@ -17,6 +17,7 @@ import {
 } from "@/data/menu";
 import { shots } from "@/data/media";
 import { Photo } from "@/components/Photo";
+import { ChevronRightIcon, SearchIcon, MinusIcon, PlusIcon } from "@/components/Icon";
 import { rememberGuest, recallGuest } from "@/lib/guest";
 import { setLineNote } from "@/lib/orders";
 import {
@@ -47,7 +48,7 @@ export function TableScreen({ table }: { table: string }) {
   const [optionFor, setOptionFor] = useState<MenuItem | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [flash, setFlash] = useState<string | null>(null);
-  // Captured once, when the guest scans in — not a ticking clock.
+  // Captured once, when the guest scans in: not a ticking clock.
   const [scannedAt] = useState(() => Date.now());
 
   const count = cartCount(lines);
@@ -90,7 +91,7 @@ export function TableScreen({ table }: { table: string }) {
         <header className="sticky top-0 z-30 bg-paper">
           <ArcadeRule size={20} />
           <div className="px-4 pt-3 flex items-center justify-between gap-3">
-            <span className="inline-flex items-center h-6 px-3 rounded-full bg-brand text-cream text-xs font-semibold uppercase tracking-[0.12em]">
+            <span className="inline-flex items-center h-6 px-3 rounded-[6px] bg-brand text-cream text-xs font-semibold uppercase tracking-[0.12em]">
               {spotLabel}
             </span>
             <span className="text-xs uppercase tracking-[0.12em] text-muted">
@@ -117,12 +118,7 @@ export function TableScreen({ table }: { table: string }) {
                 aria-label="Search the menu"
                 className="w-full h-10 pl-9 pr-3 bg-cream border border-line text-sm placeholder:text-muted focus:border-brand focus:outline-none"
               />
-              <span
-                aria-hidden
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-sm"
-              >
-                ⌕
-              </span>
+              <SearchIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
             </div>
             <button
               type="button"
@@ -183,7 +179,7 @@ export function TableScreen({ table }: { table: string }) {
               <Link
                 key={order.id}
                 href={`/t/${table}/order/${order.id}`}
-                className="flex items-center justify-between gap-3 rounded-full border border-brand/40 bg-brand/5 px-4 py-2.5 mb-2 hover:bg-brand/10 transition-colors"
+                className="flex items-center justify-between gap-3 rounded-[6px] border border-brand/40 bg-brand/5 px-4 py-2.5 mb-2 hover:bg-brand/10 transition-colors"
               >
                 <span className="text-xs">
                   <span className="font-semibold text-brand">{order.code}</span>
@@ -193,7 +189,10 @@ export function TableScreen({ table }: { table: string }) {
                   </span>
                 </span>
                 <span className="text-xs uppercase tracking-[0.12em] font-bold text-brand">
-                  {order.billRequested ? "Bill coming" : STATUS_LABEL[order.status]} →
+                  <span className="inline-flex items-center gap-1">
+                    {order.billRequested ? "Bill coming" : STATUS_LABEL[order.status]}
+                    <ChevronRightIcon className="w-3.5 h-3.5" />
+                  </span>
                 </span>
               </Link>
             ))}
@@ -336,7 +335,7 @@ export function TableScreen({ table }: { table: string }) {
 
       {optionFor ? (
         <OptionSheet
-          // Keyed so the sheet remounts per item — otherwise the previous
+          // Keyed so the sheet remounts per item: otherwise the previous
           // item's choices survive into the new one.
           key={optionFor.id}
           item={optionFor}
@@ -514,14 +513,14 @@ function CheckoutSheet({
                   />
                 </div>
 
-                <div className="flex items-center shrink-0 self-start rounded-full border border-line overflow-hidden">
+                <div className="flex items-center shrink-0 self-start rounded-[6px] border border-line overflow-hidden">
                   <button
                     type="button"
                     onClick={() => setLineQty(table, index, line.qty - 1)}
                     className="w-9 h-9 grid place-items-center text-ink hover:bg-sand transition-colors"
                     aria-label={`One less ${line.name}`}
                   >
-                    –
+                  <MinusIcon className="w-3.5 h-3.5" />
                   </button>
                   <span className="w-8 text-center tnum text-sm font-bold">{line.qty}</span>
                   <button
@@ -530,7 +529,7 @@ function CheckoutSheet({
                     className="w-9 h-9 grid place-items-center text-ink hover:bg-sand transition-colors"
                     aria-label={`One more ${line.name}`}
                   >
-                    +
+                  <PlusIcon className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </li>
@@ -589,7 +588,7 @@ function CheckoutSheet({
           {needsPhone ? (
             <div>
               <label htmlFor="guest-phone" className="eyebrow block mb-2">
-                Phone — we message when it is bagged
+                Phone, so we can message when it is bagged
               </label>
               <input
                 id="guest-phone"
