@@ -33,6 +33,12 @@ export function useSoldOut(): string[] {
   return useSnapshot().soldOut;
 }
 
+/** Whether the last read of the order database succeeded, and whether one has landed yet. */
+export function useConnection(): { online: boolean; loaded: boolean } {
+  const snapshot = useSnapshot();
+  return { online: snapshot.online, loaded: snapshot.loaded };
+}
+
 /* ------------------------------------------------------------
    A single shared clock, rather than one interval per component.
    Elapsed timers on the counter board all tick off this.

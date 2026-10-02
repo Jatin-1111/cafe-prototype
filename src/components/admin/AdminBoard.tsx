@@ -18,7 +18,7 @@ import {
   type OrderStatus,
   type PaymentMethod,
 } from "@/lib/orders";
-import { useMounted, useNow, useOrders, useSoldOut } from "@/lib/useStore";
+import { useConnection, useMounted, useNow, useOrders, useSoldOut } from "@/lib/useStore";
 
 /** Lanes the counter works, left to right. `paid` is closed out below the board. */
 const LANES: OrderStatus[] = ["new", "preparing", "ready", "served"];
@@ -46,6 +46,7 @@ export function AdminBoard() {
   const orders = useOrders();
   const soldOut = useSoldOut();
   const now = useNow();
+  const { online, loaded } = useConnection();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [closedOpen, setClosedOpen] = useState(false);
@@ -105,12 +106,19 @@ export function AdminBoard() {
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <span className="hidden sm:flex items-center gap-2 text-xs text-muted">
+            <span
+              className={`hidden sm:flex items-center gap-2 text-xs ${
+                online ? "text-muted" : "text-status-new font-semibold"
+              }`}
+              role="status"
+            >
               <span
                 aria-hidden
-                className="w-1.5 h-1.5 rounded-full bg-status-ready animate-pulse"
+                className={`w-1.5 h-1.5 rounded-full ${
+                  online ? "bg-status-ready animate-pulse" : "bg-status-new"
+                }`}
               />
-              Live
+              {online ? (loaded ? "Live" : "Connecting…") : "Offline"}
             </span>
             <span className="tnum text-sm text-ink-2 hidden sm:inline">
               {mounted && now ? clockTime(now) : "—"}

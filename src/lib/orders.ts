@@ -1,306 +1,53 @@
-import { menuById, type MenuItem } from "@/data/menu";
+import { menuById } from "@/data/menu";
+import {
+  type Guest,
+  type Order,
+  type OrderLine,
+  type OrderStatus,
+  type OrderType,
+  type PaymentMethod,
+  type ServerState,
+  STATUS_FLOW,
+} from "@/lib/orderTypes";
 
 /* ============================================================
-   Order store
-   ------------------------------------------------------------
-   A prototype-scale store: everything lives in localStorage and
-   is broadcast to other tabs, so an order placed on a phone shows
-   up on the admin board on a laptop with no backend involved.
-   Swapping this file for real API calls is the only change needed
-   to put this on a server.
+   The browser's view of the order state.
+
+   Orders and the sold-out list live in MongoDB and are reached
+   through /api — so a guest's phone and the counter laptop are
+   genuinely looking at the same data, which localStorage alone
+   could never do.
+
+   The cart is the exception and stays on the device: it is an
+   unsent draft, it belongs to one phone, and keeping it local means
+   adding an item is instant and survives a dropped connection.
    ============================================================ */
 
-/** Service state of an order. The guest-facing stepper collapses the last two. */
-export type OrderStatus = "new" | "preparing" | "ready" | "served" | "paid";
-
-export type PaymentMethod = "upi" | "card" | "cash";
-
-export type OrderType = "table" | "takeaway";
-
-/** Lanes the counter works through, in order. */
-export const STATUS_FLOW: OrderStatus[] = ["new", "preparing", "ready", "served", "paid"];
-
-/** Everything the kitchen board advances with one button. */
-export const KITCHEN_FLOW: OrderStatus[] = ["new", "preparing", "ready"];
-
-export const STATUS_LABEL: Record<OrderStatus, string> = {
-  new: "New",
-  preparing: "Preparing",
-  ready: "Ready",
-  served: "To settle",
-  paid: "Closed",
-};
-
-/** What the button that advances an order should say, per status. */
-export const STATUS_ACTION: Record<OrderStatus, string | null> = {
-  new: "Start preparing",
-  preparing: "Mark ready",
-  ready: "Hand to table",
-  served: null, // settled with a payment method instead
-  paid: null,
-};
-
-export const PAYMENT_LABEL: Record<PaymentMethod, string> = {
-  upi: "UPI",
-  card: "Card",
-  cash: "Cash",
-};
-
-/** Stages the guest sees. `served` and `paid` both land on the last one. */
-export const GUEST_STAGES: { key: OrderStatus; label: string; copy: string }[] = [
-  {
-    key: "new",
-    label: "Sent",
-    copy: "On the counter screen. Someone picks it up in a moment.",
-  },
-  {
-    key: "preparing",
-    label: "Preparing",
-    copy: "Being made now. Coffee first, plates as they come.",
-  },
-  {
-    key: "ready",
-    label: "Ready",
-    copy: "On the pass. It is walking over to you.",
-  },
-  {
-    key: "served",
-    label: "At the table",
-    copy: "All yours. Settle up whenever you are ready.",
-  },
-];
-
-/** Same four stages, worded for someone waiting at the counter rather than a table. */
-export function guestStagesFor(orderType: OrderType) {
-  if (orderType !== "takeaway") return GUEST_STAGES;
-  return GUEST_STAGES.map((stage) => {
-    if (stage.key === "ready") {
-      return { ...stage, label: "Bagged", copy: "Bagged and waiting at the counter for you." };
-    }
-    if (stage.key === "served") {
-      return { ...stage, label: "Collected", copy: "Yours. Settle up whenever you are ready." };
-    }
-    return stage;
-  });
-}
-
-export type OrderLine = {
-  itemId: string;
-  name: string;
-  price: number;
-  qty: number;
-  options?: Record<string, string>;
-};
-
-export type Guest = { name?: string; phone?: string };
-
-export type Order = {
-  id: string;
-  code: string;
-  table: string;
-  orderType: OrderType;
-  guest?: Guest;
-  lines: OrderLine[];
-  total: number;
-  status: OrderStatus;
-  placedAt: number;
-  updatedAt: number;
-  note?: string;
-  /** Guest tapped "ask for the bill" — the counter sees it flagged. */
-  billRequested?: boolean;
-  paidAt?: number;
-  paymentMethod?: PaymentMethod;
-};
-
-const ORDERS_KEY = "refections.orders.v1";
-const CART_KEY = "refections.carts.v1";
-const SOLD_OUT_KEY = "refections.soldout.v1";
-const CHANNEL = "refections-sync";
+export * from "@/lib/orderTypes";
 
 type Carts = Record<string, OrderLine[]>;
 
-type Snapshot = { orders: Order[]; carts: Carts; soldOut: string[] };
+type Snapshot = {
+  orders: Order[];
+  carts: Carts;
+  soldOut: string[];
+  /** False when the last attempt to reach the server failed. */
+  online: boolean;
+  /** True once the first server read has come back. */
+  loaded: boolean;
+};
 
-const EMPTY: Snapshot = { orders: [], carts: {}, soldOut: [] };
+const CART_KEY = "refections.carts.v1";
+const CHANNEL = "refections-sync";
+const POLL_MS = 2500;
+
+const EMPTY: Snapshot = { orders: [], carts: {}, soldOut: [], online: true, loaded: false };
 
 let state: Snapshot = EMPTY;
-let hydrated = false;
-const listeners = new Set<() => void>();
+let started = false;
+let timer: number | null = null;
 let channel: BroadcastChannel | null = null;
-
-/** GST is baked into the shelf price — the receipt shows what was included. */
-export const GST_RATE = 0.05;
-
-export function taxBreakdown(total: number) {
-  const base = Math.round(total / (1 + GST_RATE));
-  const gst = total - base;
-  const cgst = Math.round(gst / 2);
-  return { base, gst, cgst, sgst: gst - cgst };
-}
-
-function isBrowser() {
-  return typeof window !== "undefined";
-}
-
-function emit() {
-  for (const listener of listeners) listener();
-}
-
-function persist(broadcast = true) {
-  if (!isBrowser()) return;
-  try {
-    localStorage.setItem(ORDERS_KEY, JSON.stringify(state.orders));
-    localStorage.setItem(CART_KEY, JSON.stringify(state.carts));
-    localStorage.setItem(SOLD_OUT_KEY, JSON.stringify(state.soldOut));
-  } catch {
-    /* storage full or blocked — the prototype keeps working in memory */
-  }
-  if (broadcast) channel?.postMessage("changed");
-}
-
-function readStorage(): Snapshot {
-  try {
-    const orders = JSON.parse(localStorage.getItem(ORDERS_KEY) ?? "null");
-    const carts = JSON.parse(localStorage.getItem(CART_KEY) ?? "null");
-    const soldOut = JSON.parse(localStorage.getItem(SOLD_OUT_KEY) ?? "null");
-    return {
-      orders: Array.isArray(orders) ? (orders as Order[]) : [],
-      carts: carts && typeof carts === "object" ? (carts as Carts) : {},
-      soldOut: Array.isArray(soldOut) ? (soldOut as string[]) : [],
-    };
-  } catch {
-    return { orders: [], carts: {}, soldOut: [] };
-  }
-}
-
-function setState(next: Snapshot, broadcast = true) {
-  state = next;
-  persist(broadcast);
-  emit();
-}
-
-/* ------------------------------------------------------------
-   Seed data — so the counter board is never a sad empty screen
-   ------------------------------------------------------------ */
-
-function line(itemId: string, qty: number, options?: Record<string, string>): OrderLine {
-  const item = menuById.get(itemId) as MenuItem;
-  return { itemId, name: item.name, price: item.price, qty, options };
-}
-
-/** Something is always off the board by the evening rush. */
-const SEED_SOLD_OUT = ["m-bbq-chicken-pizza"];
-
-function seedOrders(now: number): Order[] {
-  const min = 60_000;
-
-  const drafts: Array<{
-    table: string;
-    lines: OrderLine[];
-    status: OrderStatus;
-    ago: number;
-    note?: string;
-    guest?: Guest;
-    orderType?: OrderType;
-    billRequested?: boolean;
-    paymentMethod?: PaymentMethod;
-  }> = [
-    {
-      table: "11",
-      lines: [
-        line("m-cold-coffee", 2),
-        line("m-peri-fries", 1),
-        line("m-garlic-bread", 1),
-      ],
-      status: "new",
-      ago: 1.5 * min,
-      guest: { name: "Ritika" },
-    },
-    {
-      table: "03",
-      lines: [
-        line("m-margherita", 1, { Base: "Thin crust" }),
-        line("m-cappuccino", 2, { Milk: "Full cream" }),
-      ],
-      status: "preparing",
-      ago: 6 * min,
-      note: "One cappuccino without sugar, please",
-      guest: { name: "Gurpreet" },
-    },
-    {
-      table: "07",
-      lines: [
-        line("m-alfredo", 1, { Pasta: "Penne", Add: "Chicken" }),
-        line("m-virgin-mojito", 1, { Flavour: "Green apple" }),
-      ],
-      status: "preparing",
-      ago: 11 * min,
-    },
-    {
-      table: "TA",
-      lines: [line("m-cold-brew", 2, { Milk: "Black" })],
-      status: "ready",
-      ago: 4 * min,
-      orderType: "takeaway",
-      guest: { name: "Simran", phone: "+91 98450 11223" },
-    },
-    {
-      table: "02",
-      lines: [line("m-brownie", 2), line("m-latte", 2, { Milk: "Oat", Sugar: "Less" })],
-      status: "served",
-      ago: 22 * min,
-      billRequested: true,
-      guest: { name: "Jaskaran" },
-    },
-    {
-      table: "06",
-      lines: [
-        line("m-farmhouse", 1, { Base: "Cheese burst" }),
-        line("m-chilli-paneer", 1, { Style: "Dry" }),
-      ],
-      status: "served",
-      ago: 34 * min,
-    },
-    {
-      table: "09",
-      lines: [line("m-tiramisu", 1), line("m-masala-chai", 2, { Strength: "Kadak" })],
-      status: "paid",
-      ago: 52 * min,
-      paymentMethod: "upi",
-    },
-    {
-      table: "05",
-      lines: [line("m-club-sandwich", 2, { Filling: "Chicken" }), line("m-classic-fries", 1)],
-      status: "paid",
-      ago: 68 * min,
-      paymentMethod: "card",
-    },
-  ];
-
-  return drafts.map((draft, index) => {
-    const total = draft.lines.reduce((sum, l) => sum + l.price * l.qty, 0);
-    return {
-      id: `seed-${index}`,
-      code: `K-${2205 + index}`,
-      table: draft.table,
-      orderType: draft.orderType ?? "table",
-      guest: draft.guest,
-      lines: draft.lines,
-      total,
-      status: draft.status,
-      placedAt: now - draft.ago,
-      updatedAt: now - draft.ago / 2,
-      note: draft.note,
-      billRequested: draft.billRequested,
-      paidAt: draft.status === "paid" ? now - draft.ago / 3 : undefined,
-      paymentMethod: draft.paymentMethod,
-    };
-  });
-}
-
-/* ------------------------------------------------------------
-   Wiring
-   ------------------------------------------------------------ */
+const listeners = new Set<() => void>();
 
 /** Keys from earlier iterations of the prototype, cleared so they do not linger. */
 const STALE_KEYS = [
@@ -311,11 +58,115 @@ const STALE_KEYS = [
   "kahani.orders.v3",
   "kahani.carts.v3",
   "kahani.soldout.v3",
+  "refections.orders.v1",
+  "refections.soldout.v1",
 ];
 
-function hydrate() {
-  if (hydrated || !isBrowser()) return;
-  hydrated = true;
+function isBrowser() {
+  return typeof window !== "undefined";
+}
+
+function emit() {
+  for (const listener of listeners) listener();
+}
+
+function setState(next: Snapshot) {
+  state = next;
+  emit();
+}
+
+/* ------------------------------------------------------------
+   Cart — local to this device
+   ------------------------------------------------------------ */
+
+function readCarts(): Carts {
+  try {
+    const raw = JSON.parse(localStorage.getItem(CART_KEY) ?? "null");
+    return raw && typeof raw === "object" ? (raw as Carts) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeCarts(carts: Carts, broadcast = true) {
+  try {
+    localStorage.setItem(CART_KEY, JSON.stringify(carts));
+  } catch {
+    /* private mode or full storage — the cart still works in memory */
+  }
+  if (broadcast) channel?.postMessage("carts");
+}
+
+/* ------------------------------------------------------------
+   Server state
+   ------------------------------------------------------------ */
+
+/** Replaces server-owned fields, leaving the local cart alone. */
+function apply(data: ServerState) {
+  const sameOrders = JSON.stringify(data.orders) === JSON.stringify(state.orders);
+  const sameSoldOut = JSON.stringify(data.soldOut) === JSON.stringify(state.soldOut);
+  if (sameOrders && sameSoldOut && state.online && state.loaded) return;
+
+  setState({
+    ...state,
+    orders: sameOrders ? state.orders : data.orders,
+    soldOut: sameSoldOut ? state.soldOut : data.soldOut,
+    online: true,
+    loaded: true,
+  });
+}
+
+async function pull(): Promise<void> {
+  try {
+    const response = await fetch("/api/state", { cache: "no-store" });
+    if (!response.ok) throw new Error(String(response.status));
+    apply((await response.json()) as ServerState);
+  } catch {
+    if (state.online) setState({ ...state, online: false });
+  }
+}
+
+async function send(action: Record<string, unknown>): Promise<{ ok: boolean; order?: Order }> {
+  try {
+    const response = await fetch("/api/actions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(action),
+    });
+    const data = (await response.json()) as {
+      state?: ServerState;
+      order?: Order;
+      error?: string;
+    };
+    if (data.state) apply(data.state);
+    if (!response.ok) {
+      console.warn("[orders]", action.type, data.error ?? response.status);
+      return { ok: false };
+    }
+    channel?.postMessage("orders");
+    return { ok: true, order: data.order };
+  } catch {
+    setState({ ...state, online: false });
+    return { ok: false };
+  }
+}
+
+function startPolling() {
+  if (timer !== null || !isBrowser()) return;
+  timer = window.setInterval(() => {
+    if (document.visibilityState === "visible") void pull();
+  }, POLL_MS);
+}
+
+function stopPolling() {
+  if (timer === null) return;
+  window.clearInterval(timer);
+  timer = null;
+}
+
+function start() {
+  if (started || !isBrowser()) return;
+  started = true;
 
   try {
     for (const key of STALE_KEYS) localStorage.removeItem(key);
@@ -323,34 +174,37 @@ function hydrate() {
     /* nothing to clean up */
   }
 
-  const stored = readStorage();
-  state = stored.orders.length
-    ? stored
-    : { orders: seedOrders(Date.now()), carts: stored.carts, soldOut: SEED_SOLD_OUT };
-  if (!stored.orders.length) persist(false);
+  state = { ...state, carts: readCarts() };
 
   channel = "BroadcastChannel" in window ? new BroadcastChannel(CHANNEL) : null;
-  channel?.addEventListener("message", () => {
-    state = readStorage();
-    emit();
+  channel?.addEventListener("message", (event) => {
+    // Another tab on this device changed something. Carts are local, so read
+    // them straight back; orders need a pull. Changes made on *other* devices
+    // arrive on the next poll instead.
+    if (event.data === "carts") setState({ ...state, carts: readCarts() });
+    else void pull();
   });
 
-  window.addEventListener("storage", (event) => {
-    if (event.key === ORDERS_KEY || event.key === CART_KEY || event.key === SOLD_OUT_KEY) {
-      state = readStorage();
-      emit();
-    }
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") void pull();
   });
+
+  void pull();
 }
 
 export function subscribe(listener: () => void) {
-  hydrate();
+  start();
   listeners.add(listener);
-  return () => listeners.delete(listener);
+  startPolling();
+
+  return () => {
+    listeners.delete(listener);
+    if (listeners.size === 0) stopPolling();
+  };
 }
 
 export function getSnapshot(): Snapshot {
-  hydrate();
+  start();
   return state;
 }
 
@@ -359,24 +213,12 @@ export function getServerSnapshot(): Snapshot {
 }
 
 /* ------------------------------------------------------------
-   Availability
-   ------------------------------------------------------------ */
-
-export function toggleSoldOut(itemId: string) {
-  const soldOut = state.soldOut.includes(itemId)
-    ? state.soldOut.filter((id) => id !== itemId)
-    : [...state.soldOut, itemId];
-  setState({ ...state, soldOut });
-}
-
-/* ------------------------------------------------------------
-   Cart actions
+   Cart actions — instant, local
    ------------------------------------------------------------ */
 
 function sameLine(a: OrderLine, b: OrderLine) {
   return (
-    a.itemId === b.itemId &&
-    JSON.stringify(a.options ?? {}) === JSON.stringify(b.options ?? {})
+    a.itemId === b.itemId && JSON.stringify(a.options ?? {}) === JSON.stringify(b.options ?? {})
   );
 }
 
@@ -392,100 +234,88 @@ export function addToCart(table: string, itemId: string, options?: Record<string
     ? current.map((l) => (sameLine(l, incoming) ? { ...l, qty: l.qty + 1 } : l))
     : [...current, incoming];
 
-  setState({ ...state, carts: { ...state.carts, [table]: next } });
+  const carts = { ...state.carts, [table]: next };
+  writeCarts(carts);
+  setState({ ...state, carts });
 }
 
 export function setLineQty(table: string, index: number, qty: number) {
   const current = state.carts[table] ?? [];
-  const next = current
-    .map((l, i) => (i === index ? { ...l, qty } : l))
-    .filter((l) => l.qty > 0);
-  setState({ ...state, carts: { ...state.carts, [table]: next } });
+  const next = current.map((l, i) => (i === index ? { ...l, qty } : l)).filter((l) => l.qty > 0);
+
+  const carts = { ...state.carts, [table]: next };
+  writeCarts(carts);
+  setState({ ...state, carts });
 }
 
 export function clearCart(table: string) {
-  setState({ ...state, carts: { ...state.carts, [table]: [] } });
-}
-
-export function cartTotal(lines: OrderLine[]) {
-  return lines.reduce((sum, l) => sum + l.price * l.qty, 0);
-}
-
-export function cartCount(lines: OrderLine[]) {
-  return lines.reduce((sum, l) => sum + l.qty, 0);
+  const carts = { ...state.carts, [table]: [] };
+  writeCarts(carts);
+  setState({ ...state, carts });
 }
 
 /* ------------------------------------------------------------
-   Order actions
+   Order actions — these go to the server
    ------------------------------------------------------------ */
 
-function nextCode(orders: Order[]) {
-  const highest = orders.reduce((max, order) => {
-    const n = Number.parseInt(order.code.replace("K-", ""), 10);
-    return Number.isFinite(n) && n > max ? n : max;
-  }, 2200);
-  return `K-${highest + 1}`;
-}
-
-export function placeOrder(
+export async function placeOrder(
   table: string,
   details: { note?: string; guest?: Guest; orderType?: OrderType } = {},
-): Order | null {
+): Promise<Order | null> {
   const lines = state.carts[table] ?? [];
   if (!lines.length) return null;
 
-  const now = Date.now();
-  const order: Order = {
-    id: `o-${now}-${state.orders.length}`,
-    code: nextCode(state.orders),
+  const result = await send({
+    type: "place",
     table,
-    orderType: details.orderType ?? "table",
-    guest: details.guest?.name || details.guest?.phone ? details.guest : undefined,
     lines,
-    total: cartTotal(lines),
-    status: "new",
-    placedAt: now,
-    updatedAt: now,
-    note: details.note?.trim() || undefined,
-  };
-
-  setState({
-    ...state,
-    orders: [order, ...state.orders],
-    carts: { ...state.carts, [table]: [] },
+    orderType: details.orderType,
+    guest: details.guest,
+    note: details.note,
   });
 
-  return order;
+  if (!result.ok || !result.order) return null;
+
+  clearCart(table);
+  return result.order;
 }
 
-function patch(id: string, change: (order: Order) => Order) {
+/**
+ * Counter actions update locally first so the board responds to a tap
+ * instantly, then reconcile with whatever the server comes back with.
+ */
+function optimistic(id: string, change: (order: Order) => Order) {
   setState({
     ...state,
     orders: state.orders.map((order) => (order.id === id ? change(order) : order)),
   });
 }
 
-/** Moves an order one lane along the kitchen flow. */
-export function advanceOrder(id: string) {
-  patch(id, (order) => {
+export async function advanceOrder(id: string) {
+  optimistic(id, (order) => {
     const at = STATUS_FLOW.indexOf(order.status);
-    const to = STATUS_FLOW[Math.min(at + 1, STATUS_FLOW.length - 1)];
-    return { ...order, status: to, updatedAt: Date.now() };
+    return {
+      ...order,
+      status: STATUS_FLOW[Math.min(at + 1, STATUS_FLOW.length - 1)],
+      updatedAt: Date.now(),
+    };
   });
+  await send({ type: "advance", id });
 }
 
-export function setOrderStatus(id: string, status: OrderStatus) {
-  patch(id, (order) => ({ ...order, status, updatedAt: Date.now() }));
+export async function setOrderStatus(id: string, status: OrderStatus) {
+  optimistic(id, (order) => ({ ...order, status, updatedAt: Date.now() }));
+  await send({ type: "status", id, status });
 }
 
-/** Guest asked for the bill. Flags the ticket on the counter board. */
-export function requestBill(id: string) {
-  patch(id, (order) => ({ ...order, billRequested: true, updatedAt: Date.now() }));
+export async function requestBill(id: string) {
+  optimistic(id, (order) => ({ ...order, billRequested: true, updatedAt: Date.now() }));
+  await send({ type: "bill", id });
 }
 
-export function markPaid(id: string, method: PaymentMethod) {
+export async function markPaid(id: string, method: PaymentMethod) {
   const now = Date.now();
-  patch(id, (order) => ({
+  optimistic(id, (order) => ({
     ...order,
     status: "paid",
     paymentMethod: method,
@@ -493,37 +323,17 @@ export function markPaid(id: string, method: PaymentMethod) {
     updatedAt: now,
     billRequested: false,
   }));
+  await send({ type: "pay", id, method });
 }
 
-/** Wipes everything and re-seeds. Used by the demo reset control. */
-export function resetDemo() {
-  setState({ orders: seedOrders(Date.now()), carts: {}, soldOut: SEED_SOLD_OUT });
+export async function toggleSoldOut(itemId: string) {
+  const soldOut = state.soldOut.includes(itemId)
+    ? state.soldOut.filter((id) => id !== itemId)
+    : [...state.soldOut, itemId];
+  setState({ ...state, soldOut });
+  await send({ type: "soldOut", itemId });
 }
 
-/* ------------------------------------------------------------
-   Derived helpers
-   ------------------------------------------------------------ */
-
-/** How far along the guest-facing stepper this order is. */
-export function guestStage(status: OrderStatus) {
-  return status === "paid" ? GUEST_STAGES.length - 1 : GUEST_STAGES.findIndex((s) => s.key === status);
-}
-
-export function elapsed(from: number, now: number) {
-  const seconds = Math.max(0, Math.floor((now - from) / 1000));
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  if (m >= 60) {
-    const h = Math.floor(m / 60);
-    return `${h}h ${m % 60}m`;
-  }
-  return `${m}m ${String(s).padStart(2, "0")}s`;
-}
-
-export function clockTime(at: number) {
-  return new Date(at).toLocaleTimeString("en-IN", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+export async function resetDemo() {
+  await send({ type: "reset" });
 }

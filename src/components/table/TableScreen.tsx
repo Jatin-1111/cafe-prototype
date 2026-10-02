@@ -315,15 +315,16 @@ function CheckoutSheet({
   const [phone, setPhone] = useState("");
   const [orderType, setOrderType] = useState<OrderType>(table === "TA" ? "takeaway" : "table");
   const [sending, setSending] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   const total = cartTotal(lines);
   const needsPhone = orderType === "takeaway";
   const canSend = lines.length > 0 && name.trim().length > 0 && (!needsPhone || phone.trim().length >= 6);
 
-  function send() {
+  async function send() {
     if (!canSend || sending) return;
     setSending(true);
-    const order = placeOrder(table, {
+    const order = await placeOrder(table, {
       note,
       orderType,
       guest: { name: name.trim(), phone: phone.trim() || undefined },
@@ -331,6 +332,7 @@ function CheckoutSheet({
     if (order) {
       onSent(order.id);
     } else {
+      setFailed(true);
       setSending(false);
     }
   }
@@ -469,12 +471,17 @@ function CheckoutSheet({
         </div>
         <button
           type="button"
-          onClick={send}
+          onClick={() => void send()}
           disabled={!canSend || sending}
           className="w-full py-4 bg-wine text-cream font-bold uppercase tracking-[0.14em] text-xs hover:bg-ink transition-colors disabled:opacity-40 disabled:hover:bg-wine"
         >
           {sending ? "Sending…" : "Send to the counter"}
         </button>
+        {failed ? (
+          <p className="mt-3 text-[11px] text-center text-wine">
+            That did not reach the counter. Check your connection and try again.
+          </p>
+        ) : null}
         <p className="mt-3 text-[11px] text-muted text-center">
           {canSend
             ? "Settle up from this screen or at the till, whichever you prefer."
